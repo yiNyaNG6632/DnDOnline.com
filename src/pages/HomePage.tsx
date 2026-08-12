@@ -20,6 +20,12 @@ export function HomePage() {
           <Link href="/game" className="menu-button menu-button--play">
             <span>Play</span><b>▶</b>
           </Link>
+          <Link href="/game/hard" className="menu-button menu-button--hard">
+            <span>Hard mode</span><b>No moving platforms</b>
+          </Link>
+          <Link href="/game/pve" className="menu-button menu-button--pve">
+            <span>PvE mode</span><b>Telekinetic combat</b>
+          </Link>
           <button className="menu-button" onClick={() => setOpenPanel('controls')}>How to play</button>
           <button className="menu-button" onClick={() => setOpenPanel('about')}>About</button>
         </nav>
@@ -46,9 +52,11 @@ function Controls() {
       <h2 id="menu-modal-title">How to play</h2>
       <div className="control-row"><kbd>A</kbd><kbd>D</kbd><span>Move left and right</span></div>
       <div className="control-row"><kbd>W</kbd><span>Jump</span></div>
-      <div className="control-row"><kbd>Q</kbd><span>Split your clay body</span></div>
-      <div className="control-row"><kbd>WASD</kbd><span>Steer the floating half</span></div>
-      <div className="control-row"><kbd>E</kbd><span>Pull your body back together</span></div>
+      <div className="control-row"><kbd>Q</kbd><span>Split off a clay step while airborne (up to 3)</span></div>
+      <div className="control-row"><kbd>W</kbd><span>Bounce, then split again to chain jumps</span></div>
+      <div className="control-row"><kbd>E</kbd><kbd>WASD</kbd><span>Move glowing platforms with your mind</span></div>
+      <div className="control-row"><kbd>E</kbd><span>Push nearby creatures with telekinesis</span></div>
+      <div className="control-row"><kbd>E</kbd><span>In PvE: pick up a weapon, then throw it</span></div>
       <p className="menu-modal__hint">Collect all three memories, then find the glowing door.</p>
     </div>
   );
@@ -60,8 +68,8 @@ function About() {
       <p className="menu-modal__label">About the game</p>
       <h2 id="menu-modal-title">A little hero,<br />a very big world.</h2>
       <p className="menu-modal__copy">
-        Help Pip escape six handmade rooms by jumping, exploring, and splitting
-        their clay body to cross impossible gaps. Every room holds a memory.
+        Help Pip escape nine handmade rooms by moving platforms with telekinesis
+        and using a well-timed split jump. Every room holds a memory.
       </p>
     </div>
   );

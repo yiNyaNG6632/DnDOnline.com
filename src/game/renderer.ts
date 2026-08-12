@@ -1,5 +1,8 @@
 import type { GameState, Level } from './types';
-import { drawPlasticineEnemy, drawPlasticineHero } from './plasticineCharacters';
+import { drawPlasticineHero } from './plasticineCharacters';
+import { drawSplitPart } from './splitCharacter';
+import { drawWeapon } from './weaponRenderer';
+import { drawThemedEnemy } from './themedEnemies';
 
 const WIDTH = 1000;
 const HEIGHT = 650;
@@ -18,25 +21,43 @@ export function renderGame(ctx: CanvasRenderingContext2D, state: GameState, leve
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   ctx.save();
   ctx.translate(-camera, 0);
-  state.platforms.filter((platform) => platform.y < HEIGHT - 30).forEach((platform) => {
-    drawPlatform(ctx, platform);
+  state.platforms.filter((platform) => platform.y < HEIGHT - 30).forEach((platform, index) => {
+    drawPlatform(ctx, platform, index === state.selectedPlatform, level.accent);
   });
   level.stars.forEach((star, index) => {
     if (!state.stars[index]) drawStar(ctx, star.x, star.y, level.accent);
   });
-  state.enemies.forEach((enemy) => drawPlasticineEnemy(ctx, enemy.x, enemy.y, enemy.vx, enemy.vy));
-  drawExit(ctx, level.exit.x, level.exit.y, state.stars.every(Boolean), level.accent);
+  state.weapons.forEach((weapon) => drawWeapon(ctx, weapon, level.accent));
+  state.enemies.forEach((enemy) => drawThemedEnemy(ctx, enemy, level.accent));
+  const exitOpen = state.stars.every(Boolean) && (!state.pve || state.pve.complete);
+  drawExit(ctx, level.exit.x, level.exit.y, exitOpen, level.accent);
+  if (state.splitPart) drawSplitPart(ctx, state.splitPart, level.accent);
   drawPlasticineHero(ctx, state.player, level.accent);
   ctx.restore();
 }
 
-function drawPlatform(ctx: CanvasRenderingContext2D, platform: GameState['platforms'][number]) {
+function drawPlatform(
+  ctx: CanvasRenderingContext2D,
+  platform: GameState['platforms'][number],
+  selected: boolean,
+  accent: string,
+) {
   ctx.save();
-  ctx.fillStyle = '#49344f';
+  if (platform.movable) {
+    ctx.shadowColor = accent;
+    ctx.shadowBlur = selected ? 30 : 14;
+    ctx.fillStyle = selected ? accent : '#725e7b';
+  } else ctx.fillStyle = '#49344f';
   roundedRect(ctx, platform.x, platform.y, platform.w, platform.h, 12);
   ctx.shadowBlur = 0;
-  ctx.fillStyle = '#8d668f';
+  ctx.fillStyle = platform.movable ? '#f7e9cf' : '#8d668f';
   ctx.fillRect(platform.x + 8, platform.y + 4, platform.w - 16, 5);
+  if (platform.movable) {
+    ctx.fillStyle = '#35263e';
+    ctx.font = 'bold 13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('↕  ↔', platform.x + platform.w / 2, platform.y + 22);
+  }
   ctx.restore();
 }
 

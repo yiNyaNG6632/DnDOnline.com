@@ -13,6 +13,10 @@
 .menu-button--play { display: flex; min-height: 61px; align-items: center; justify-content: center; gap: 18px; color: #35212e; border: 0; border-radius: 16px 9px 17px 11px; background: linear-gradient(145deg, #ffe79d, #ffc85e); box-shadow: inset 3px 3px 4px #fff3c6, 6px 7px 0 #c9524b, 0 16px 30px #10191d; font-size: 16px; }
 .menu-button--play:hover { background: linear-gradient(145deg, #ffedaf, #ffd16e); border-color: transparent; }
 .menu-button--play b { font-size: 13px; }
+.menu-button--hard { display: flex; align-items: center; justify-content: space-between; border-color: #ff80687a; }
+.menu-button--hard b { color: #ffad91; font: 500 7px 'DM Mono'; letter-spacing: .08em; }
+.menu-button--pve { display: flex; align-items: center; justify-content: space-between; border-color: #79d8ff7a; }
+.menu-button--pve b { color: #a9eaff; font: 500 7px 'DM Mono'; letter-spacing: .08em; }
 .home-menu__footer { position: absolute; z-index: 2; bottom: 25px; color: #e5d8c6; font: 500 8px 'DM Mono'; letter-spacing: .16em; text-transform: uppercase; }
 .menu-modal { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(12, 14, 19, .72); backdrop-filter: blur(8px); }
 .menu-modal__card { position: relative; width: min(470px, 100%); padding: 42px; border: 1px solid #ffe6b059; border-radius: 24px 17px 27px 18px; background: radial-gradient(circle at 20% 0, #594355, #27202e 65%); box-shadow: 0 30px 80px #07090c; }

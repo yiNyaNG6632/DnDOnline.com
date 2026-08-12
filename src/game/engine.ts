@@ -1,14 +1,34 @@
-import type { GameState, Level, Rect } from './types';
+import type { GameMode, GameState, Level, Rect } from './types';
+import { tryJumpFromSplit, updateSplitJump } from './splitJump';
+import { squashOnLanding, stretchForJump, updateSlimePhysics } from './slimePhysics';
+import { updatePlatformTelekinesis } from './telekinesis';
+import { createWaveEnemies, createWeapons, TOTAL_WAVES, updatePveCombat } from './pveCombat';
+import { updateEnemies } from './enemyPhysics';
 
 const WORLD_END = 2200;
-export type GameActions = { jump: boolean; power: boolean };
+export type GameActions = { jump: boolean; split: boolean; power: boolean };
 
-export function createState(level: Level): GameState {
+export function createState(level: Level, mode: GameMode = 'normal'): GameState {
   return {
-    player: { x: 70, y: 540, w: 48, h: 62, vx: 0, vy: 0, grounded: false, canDoubleJump: false, facing: 1, pulse: 0 },
-    platforms: level.platforms.map((platform) => ({ ...platform })),
+    player: {
+      x: 70, y: 540, w: 48, h: 62, vx: 0, vy: 0, grounded: false,
+      canDoubleJump: false, splitUsed: false, splitCount: 0, facing: 1, pulse: 0,
+      slimeSquash: 0, slimeSquashSpeed: 0, slimeTilt: 0,
+    },
+    platforms: level.platforms.map((platform) => ({
+      ...platform,
+      movable: mode === 'hard' ? false : platform.movable,
+    })),
+    selectedPlatform: null,
+    splitPart: null,
+    weapons: mode === 'pve' ? createWeapons(level) : [],
+    pve: mode === 'pve' ? { wave: 1, totalWaves: TOTAL_WAVES, nextWaveIn: 0, complete: false } : null,
     stars: level.stars.map(() => false),
-    enemies: [],
+    enemies: mode === 'pve'
+      ? createWaveEnemies(level, 1)
+      : level.enemies.map((enemy, index) => ({
+        ...enemy, vx: 0, vy: 0, theme: level.enemyTheme, phase: index * 37,
+      })),
     won: false,
   };
 }
@@ -23,16 +43,28 @@ function inputAxis(keys: Set<string>, negative: string[], positive: string[]) {
   return Number(high) - Number(low);
 }
 
-export function updateGame(state: GameState, level: Level, keys: Set<string>, actions: GameActions) {
+export function updateGame(
+  state: GameState,
+  level: Level,
+  keys: Set<string>,
+  actions: GameActions,
+  mode: GameMode = 'normal',
+) {
   const player = state.player;
-  if (actions.power) pushEnemies(state);
-  movePlayer(player, keys, actions.jump);
+  const usingTelekinesis = updatePlatformTelekinesis(state, keys);
+  if (mode === 'pve') updatePveCombat(state, level, actions.power);
+  else if (actions.power) pushEnemies(state);
+  updateSplitJump(state, actions.split);
+  if (usingTelekinesis) player.vx *= 0.7;
+  else movePlayer(state, keys, actions.jump);
   applyGravityAndCollisions(state);
+  updateSlimePhysics(player);
   if (player.y > 720) resetPlayer(state, level);
   collectStars(state, level);
-  updateEnemies(state);
+  updateEnemies(state, mode);
   player.pulse = Math.max(0, player.pulse - 1);
-  if (state.stars.every(Boolean) && Math.hypot(player.x - level.exit.x, player.y - level.exit.y) < 100) state.won = true;
+  const objectivesComplete = state.stars.every(Boolean) && (mode !== 'pve' || state.pve?.complete);
+  if (objectivesComplete && Math.hypot(player.x - level.exit.x, player.y - level.exit.y) < 100) state.won = true;
 }
 
 function pushEnemies(state: GameState) {
@@ -47,19 +79,23 @@ function pushEnemies(state: GameState) {
   });
 }
 
-function movePlayer(player: GameState['player'], keys: Set<string>, jumpPressed: boolean) {
+function movePlayer(state: GameState, keys: Set<string>, jumpPressed: boolean) {
+  const player = state.player;
   const direction = inputAxis(keys, ['a', 'arrowleft'], ['d', 'arrowright']);
-  player.vx += direction === 0 ? -player.vx * 0.18 : direction * 0.75;
+  player.vx += direction === 0 ? -player.vx * 0.13 : direction * 0.62;
   player.vx = Math.max(-6, Math.min(6, player.vx));
   if (direction) player.facing = direction;
   if (jumpPressed && player.grounded) {
     player.vy = -13.5;
     player.grounded = false;
     player.canDoubleJump = true;
-  } else if (jumpPressed && player.canDoubleJump) {
+    player.splitUsed = false;
+    player.splitCount = 0;
+    stretchForJump(player);
+  } else if (jumpPressed && tryJumpFromSplit(state)) {
     player.vy = -12.5;
-    player.canDoubleJump = false;
     player.pulse = 18;
+    stretchForJump(player);
   }
 }
 
@@ -71,10 +107,19 @@ function applyGravityAndCollisions(state: GameState) {
   player.grounded = false;
   for (const platform of state.platforms) {
     if (overlaps(player, platform) && player.vy >= 0 && player.y + player.h - player.vy <= platform.y + 8) {
+      const impactSpeed = player.vy;
       player.y = platform.y - player.h;
       player.vy = 0;
       player.grounded = true;
       player.canDoubleJump = false;
+      player.splitUsed = false;
+      player.splitCount = 0;
+      state.splitPart = null;
+      if (impactSpeed > 3) squashOnLanding(player, impactSpeed);
+      if (impactSpeed > 11.5) {
+        player.vy = -Math.min(2.2, (impactSpeed - 9) * 0.45);
+        player.grounded = false;
+      }
     }
   }
 }
@@ -82,30 +127,12 @@ function applyGravityAndCollisions(state: GameState) {
 function resetPlayer(state: GameState, level: Level) {
   const fresh = createState(level);
   Object.assign(state.player, fresh.player);
+  state.splitPart = null;
+  state.selectedPlatform = null;
 }
 
 function collectStars(state: GameState, level: Level) {
   level.stars.forEach((star, index) => {
     if (Math.hypot(state.player.x + 24 - star.x, state.player.y + 30 - star.y) < 52) state.stars[index] = true;
-  });
-}
-
-function updateEnemies(state: GameState) {
-  state.enemies.forEach((enemy) => {
-    const previousY = enemy.y;
-    enemy.vy = Math.min(enemy.vy + 0.55, 14);
-    enemy.x = Math.max(22, Math.min(WORLD_END - 22, enemy.x + enemy.vx));
-    enemy.y += enemy.vy;
-    enemy.vx *= 0.96;
-    const landingY = state.platforms
-      .filter((platform) => enemy.x >= platform.x && enemy.x <= platform.x + platform.w)
-      .map((platform) => platform.y - 40)
-      .filter((y) => y >= previousY - 2 && enemy.y >= y)
-      .sort((a, b) => a - b)[0];
-    if (landingY !== undefined && enemy.vy >= 0) {
-      enemy.y = landingY;
-      enemy.vy = 0;
-      if (Math.abs(enemy.vx) < 0.08) enemy.vx = 0;
-    }
   });
 }

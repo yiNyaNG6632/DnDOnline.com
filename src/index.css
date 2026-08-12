@@ -14,6 +14,7 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
 .game-brand { font-size: 10px; letter-spacing: .14em; font-weight: 800; }
 .room-title { display: flex; flex-direction: column; align-items: center; }
 .room-title small { color: var(--level-accent); font: 9px 'DM Mono'; text-transform: uppercase; letter-spacing: .2em; }
+.room-title small b { margin-left: 10px; padding: 3px 6px; border: 1px solid #ff80687a; border-radius: 5px; color: #ffad91; font-size: 7px; }
 .room-title strong { font: 700 20px 'Fraunces'; }
 .memory-count { justify-self: end; display: grid; grid-template-columns: repeat(3, 18px); gap: 3px; align-items: center; }
 .memory-count i { color: #55475c; font-style: normal; } .memory-count i.found { color: var(--level-accent); text-shadow: 0 0 10px var(--level-accent); }
@@ -24,10 +25,12 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
 .power-buttons { position: absolute; right: 18px; bottom: 18px; display: flex; gap: 7px; }
 .power-buttons button { display: flex; align-items: center; gap: 7px; padding: 9px 12px; border: 1px solid #ffffff35; border-radius: 12px; color: #f8f0e3; background: #1a1125cc; font: 700 9px 'DM Mono'; letter-spacing: .1em; text-transform: uppercase; cursor: pointer; backdrop-filter: blur(8px); }
 .power-buttons button:hover { border-color: var(--level-accent); color: var(--level-accent); }
+.hint-card { position: absolute; z-index: 3; left: 30px; top: 30px; display: flex; flex-direction: column; gap: 3px; padding: 10px 14px; background: #1a1125cc; border-left: 2px solid var(--level-accent); backdrop-filter: blur(10px); }
+.hint-card b { color: var(--level-accent); font: 8px 'DM Mono'; letter-spacing: .18em; }.hint-card span { font-size: 11px; color: #ddcedf; }
 .game-help { display: flex; justify-content: center; gap: 30px; margin-top: 18px; color: #7d7081; font: 8px 'DM Mono'; letter-spacing: .12em; }
 .touch-controls { display: none; position: absolute; inset: auto 14px 12px; justify-content: space-between; pointer-events: none; }
 .touch-controls button { pointer-events: auto; width: 48px; height: 48px; border: 1px solid #ffffff4d; border-radius: 50%; color: white; background: #1a1125aa; font-size: 20px; touch-action: none; }
-.touch-controls button:nth-child(2) { margin-right: auto; margin-left: 8px; }.touch-controls .touch-power { margin-left: 8px; background: #ef6b54cc; border-color: #ff9b80; }.touch-controls .touch-recall { margin-left: 6px; background: #7057a5cc; border-color: #c7b4ff; }
+.touch-controls button:nth-child(2) { margin-right: auto; margin-left: 8px; }.touch-controls .touch-power { margin-left: 6px; background: #ef6b54cc; border-color: #ff9b80; }.touch-controls .touch-split { background: #7057a5cc; border-color: #c7b4ff; }
 .ending { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 20px; background: #130c1be8; backdrop-filter: blur(12px); }
 .ending__card { width: min(600px, 100%); padding: 55px; text-align: center; border: 1px solid #6a5770; border-radius: 30px; background: radial-gradient(circle at 50% 10%, #493256, #24182c 65%); box-shadow: 0 25px 100px #000; }
 .ending__star { color: #ffca68; font-size: 36px; }.ending p { color: #ffca68; margin: 15px; font: 9px 'DM Mono'; letter-spacing: .25em; }
@@ -35,5 +38,5 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
 .ending button { display: block; margin: 32px auto 18px; border: 0; border-radius: 14px; padding: 14px 22px; background: #ffca68; color: #2d1c39; font-weight: 800; cursor: pointer; }.ending a { color: #998b9c; font-size: 12px; }
 
 @media (max-width: 760px) {
-  .game-page { padding: 8px; }.game-header { grid-template-columns: 1fr 1fr; }.game-brand, .power-buttons { display: none; }.room-title { align-items: flex-start; }.game-frame { padding: 5px; border-radius: 14px; }.game-stage { border-radius: 10px; }.touch-controls { display: flex; }.game-help { display: none; }
+  .game-page { padding: 8px; }.game-header { grid-template-columns: 1fr 1fr; }.game-brand, .power-buttons { display: none; }.room-title { align-items: flex-start; }.game-frame { padding: 5px; border-radius: 14px; }.game-stage { border-radius: 10px; }.hint-card { left: 12px; top: 12px; }.touch-controls { display: flex; }.game-help { display: none; }
 }
