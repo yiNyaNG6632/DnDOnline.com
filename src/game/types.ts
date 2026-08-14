@@ -5,6 +5,7 @@ export type EnemyTheme = 'bedroom' | 'workshop' | 'attic' | 'clockwork' | 'studi
 
 export type Platform = Rect & {
   movable?: boolean;
+  dropThrough?: boolean;
   scenery?: 'floor' | 'wood' | 'fabric';
   moveArea?: { minX: number; maxX: number; minY: number; maxY: number };
 };
@@ -13,6 +14,8 @@ export type SecretArea = {
   name: string;
   trigger: Rect;
   entrance: Rect;
+  room: Rect;
+  kind: 'drawer' | 'underbed';
 };
 
 export type Level = {
@@ -81,6 +84,10 @@ export type GameState = {
   splitPart: SplitPart | null;
   stars: boolean[];
   discoveredSecrets: boolean[];
+  activeSecret: number | null;
+  secretNoticeFrames: number;
+  dropThroughFrames: number;
+  dropInputReleased: boolean;
   enemies: TelekineticObject[];
   enemyStrategy: EnemyStrategy;
   won: boolean;

@@ -7,6 +7,8 @@ import { DEFAULT_ENEMY_STRATEGY } from './enemyStrategy';
 import {
   hasEnergy, MAX_ENERGY, PUSH_ENERGY_COST, recoverEnergy, spendEnergy, TELEKINESIS_DRAIN,
 } from './playerEnergy';
+import { updateSecretAreas } from './secretAreas';
+import { updateDropThrough } from './platformDrop';
 
 export type GameActions = { jump: boolean; split: boolean; power: boolean };
 
@@ -23,6 +25,10 @@ export function createState(level: Level): GameState {
     splitPart: null,
     stars: level.stars.map(() => false),
     discoveredSecrets: level.secrets.map(() => false),
+    activeSecret: null,
+    secretNoticeFrames: 0,
+    dropThroughFrames: 0,
+    dropInputReleased: true,
     enemies: level.enemies.map((enemy, index) => ({
       ...enemy, vx: 0, vy: 0, theme: level.enemyTheme, phase: index * 37,
       health: 2, attackTimer: 30 + index * 18,
@@ -61,27 +67,17 @@ export function updateGame(
   updateSplitJump(state, actions.split);
   if (usingTelekinesis) player.vx *= 0.7;
   else movePlayer(state, keys, actions.jump, controls);
+  updateDropThrough(state, keys, controls);
   applyGravityAndCollisions(state, level.width);
+  updateSecretAreas(state, level);
   updateSlimePhysics(player);
   if (player.y > level.height + 120) resetPlayer(state, level);
   collectStars(state, level);
-  discoverSecrets(state, level);
   updateEnemies(state, level);
   player.pulse = Math.max(0, player.pulse - 1);
   player.invulnerableFrames = Math.max(0, player.invulnerableFrames - 1);
   const objectivesComplete = state.stars.every(Boolean);
   if (objectivesComplete && Math.hypot(player.x - level.exit.x, player.y - level.exit.y) < 100) state.won = true;
-}
-
-function discoverSecrets(state: GameState, level: Level) {
-  const centerX = state.player.x + state.player.w / 2;
-  const centerY = state.player.y + state.player.h / 2;
-  level.secrets.forEach((secret, index) => {
-    if (centerX >= secret.trigger.x && centerX <= secret.trigger.x + secret.trigger.w
-      && centerY >= secret.trigger.y && centerY <= secret.trigger.y + secret.trigger.h) {
-      state.discoveredSecrets[index] = true;
-    }
-  });
 }
 
 function movePlayer(state: GameState, keys: Set<string>, jumpPressed: boolean, controls: ControlScheme) {
@@ -111,7 +107,9 @@ function applyGravityAndCollisions(state: GameState, worldWidth: number) {
   player.x = Math.max(0, Math.min(worldWidth - player.w, player.x + player.vx));
   player.y += player.vy;
   player.grounded = false;
+  state.dropThroughFrames = Math.max(0, state.dropThroughFrames - 1);
   for (const platform of state.platforms) {
+    if (state.dropThroughFrames > 0) continue;
     if (overlaps(player, platform) && player.vy >= 0 && player.y + player.h - player.vy <= platform.y + 8) {
       const impactSpeed = player.vy;
       player.y = platform.y - player.h;
@@ -142,6 +140,9 @@ function resetPlayer(state: GameState, level: Level) {
   state.player.invulnerableFrames = 60;
   state.splitPart = null;
   state.selectedPlatform = null;
+  state.activeSecret = null;
+  state.dropThroughFrames = 0;
+  state.dropInputReleased = false;
 }
 
 function collectStars(state: GameState, level: Level) {

@@ -2,6 +2,7 @@ import type { GameState, Level } from './types';
 import { drawPlasticineHero } from './plasticineCharacters';
 import { drawSplitPart } from './splitCharacter';
 import { drawThemedEnemy } from './themedEnemies';
+import { drawSecretAreas, drawSecretNotice } from './secretAreas';
 
 const WIDTH = 1000;
 const HEIGHT = 650;
@@ -18,7 +19,8 @@ export function renderGame(
   ctx.fillStyle = '#17101e'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
   ctx.save();
   ctx.translate(-cameraX, -cameraY);
-  if (image.complete && image.naturalWidth > 0) ctx.drawImage(image, 0, 0, level.width, level.height);
+  if (image.complete && image.naturalWidth > 0) ctx.drawImage(image, 0, 0, 3000, 2000);
+  drawSecretAreas(ctx, state, level);
   level.stars.forEach((star, index) => {
     if (!state.stars[index]) drawStar(ctx, star.x, star.y, level.accent);
   });
@@ -29,6 +31,7 @@ export function renderGame(
   drawPlasticineHero(ctx, state.player, level.accent);
   ctx.restore();
   drawRoomMap(ctx, state, level, cameraX, cameraY);
+  drawSecretNotice(ctx, state, level);
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -37,25 +40,29 @@ function clamp(value: number, min: number, max: number) {
 
 function drawRoomMap(ctx: CanvasRenderingContext2D, state: GameState, level: Level, cameraX: number, cameraY: number) {
   const x = WIDTH - 174; const y = 185; const w = 148; const h = 70;
+  const bounds = state.activeSecret === null
+    ? { x: 0, y: 0, w: 3000, h: level.height }
+    : level.secrets[state.activeSecret].room;
   ctx.fillStyle = '#100b18cc'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 10); ctx.fill();
   ctx.strokeStyle = '#8f7b9844'; ctx.stroke();
   ctx.save(); ctx.translate(x + 10, y + 10);
-  const scaleX = (w - 20) / level.width; const scaleY = (h - 20) / level.height;
+  const scaleX = (w - 20) / bounds.w; const scaleY = (h - 20) / bounds.h;
   ctx.strokeStyle = '#8c789666'; ctx.lineWidth = 2;
-  state.platforms.filter((platform) => (
-    platform.w > 175 && (platform.y < 1600 || state.discoveredSecrets.some(Boolean))
-  )).forEach((platform) => {
-    ctx.beginPath(); ctx.moveTo(platform.x * scaleX, platform.y * scaleY);
-    ctx.lineTo((platform.x + platform.w) * scaleX, platform.y * scaleY); ctx.stroke();
+  state.platforms.filter((platform) => platform.w > 175
+    && platform.x < bounds.x + bounds.w && platform.x + platform.w > bounds.x
+    && platform.y >= bounds.y && platform.y <= bounds.y + bounds.h).forEach((platform) => {
+    ctx.beginPath(); ctx.moveTo((platform.x - bounds.x) * scaleX, (platform.y - bounds.y) * scaleY);
+    ctx.lineTo((platform.x + platform.w - bounds.x) * scaleX, (platform.y - bounds.y) * scaleY); ctx.stroke();
   });
   level.secrets.forEach((secret, index) => {
-    if (!state.discoveredSecrets[index]) return;
+    if (!state.discoveredSecrets[index] || state.activeSecret !== null) return;
     ctx.fillStyle = level.accent;
-    ctx.fillRect(secret.entrance.x * scaleX - 2, secret.entrance.y * scaleY - 2, 5, 5);
+    ctx.fillRect((secret.entrance.x - bounds.x) * scaleX - 2, (secret.entrance.y - bounds.y) * scaleY - 2, 5, 5);
   });
-  ctx.strokeStyle = '#ffffff22'; ctx.strokeRect(cameraX * scaleX, cameraY * scaleY, WIDTH * scaleX, HEIGHT * scaleY);
+  ctx.strokeStyle = '#ffffff22';
+  ctx.strokeRect((cameraX - bounds.x) * scaleX, (cameraY - bounds.y) * scaleY, WIDTH * scaleX, HEIGHT * scaleY);
   ctx.fillStyle = level.accent; ctx.shadowColor = level.accent; ctx.shadowBlur = 8;
-  ctx.beginPath(); ctx.arc((state.player.x + 24) * scaleX, (state.player.y + 31) * scaleY, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc((state.player.x + 24 - bounds.x) * scaleX, (state.player.y + 31 - bounds.y) * scaleY, 3, 0, Math.PI * 2); ctx.fill();
   ctx.restore(); ctx.shadowBlur = 0;
 }
 

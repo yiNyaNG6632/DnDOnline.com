@@ -114,7 +114,7 @@ export function GamePage() {
                 <button className={controls === 'arrows' ? 'active' : ''} onClick={() => setControls('arrows')}>Arrow keys</button>
                 <button className={controls === 'wasd' ? 'active' : ''} onClick={() => setControls('wasd')}>WASD</button>
               </div>
-              <p>Movement and <kbd>E</kbd> platform control use this layout.</p>
+              <p>Tap Down to drop through ledges—or enter a hidden opening.</p>
               <button className="resume-button" onClick={() => setPaused(false)}>Resume</button>
             </div>
           </div>
@@ -122,6 +122,7 @@ export function GamePage() {
       </section>
       <div className="game-help">
         <span><kbd>{controls === 'wasd' ? 'W' : '↑'}</kbd> JUMP</span><span><kbd>Q</kbd> SPLIT ×3</span>
+        <span><kbd>{controls === 'wasd' ? 'S' : '↓'}</kbd> DROP / ENTER</span>
         <span><kbd>E</kbd> PUSH ENEMIES</span>
         <span><kbd>E</kbd> + {controls === 'wasd' ? 'WASD' : 'ARROWS'} MOVE PLATFORM</span>
       </div>
