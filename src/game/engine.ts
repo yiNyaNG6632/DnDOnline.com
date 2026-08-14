@@ -1,35 +1,35 @@
-import type { GameMode, GameState, Level, Rect } from './types';
+import type { ControlScheme, GameState, Level, Rect } from './types';
 import { tryJumpFromSplit, updateSplitJump } from './splitJump';
 import { squashOnLanding, stretchForJump, updateSlimePhysics } from './slimePhysics';
 import { updatePlatformTelekinesis } from './telekinesis';
-import { createWaveEnemies, createWeapons, TOTAL_WAVES, updatePveCombat } from './pveCombat';
-import { updateEnemies } from './enemyPhysics';
+import { pushEnemies, updateEnemies } from './enemyPhysics';
+import { DEFAULT_ENEMY_STRATEGY } from './enemyStrategy';
+import {
+  hasEnergy, MAX_ENERGY, PUSH_ENERGY_COST, recoverEnergy, spendEnergy, TELEKINESIS_DRAIN,
+} from './playerEnergy';
 
-const WORLD_END = 2200;
 export type GameActions = { jump: boolean; split: boolean; power: boolean };
 
-export function createState(level: Level, mode: GameMode = 'normal'): GameState {
+export function createState(level: Level): GameState {
   return {
     player: {
-      x: 70, y: 540, w: 48, h: 62, vx: 0, vy: 0, grounded: false,
+      x: level.spawn.x, y: level.spawn.y, w: 48, h: 62, vx: 0, vy: 0, grounded: false,
       canDoubleJump: false, splitUsed: false, splitCount: 0, facing: 1, pulse: 0,
       slimeSquash: 0, slimeSquashSpeed: 0, slimeTilt: 0,
+      health: 3, invulnerableFrames: 0, energy: MAX_ENERGY, energyRegenDelay: 0,
     },
-    platforms: level.platforms.map((platform) => ({
-      ...platform,
-      movable: mode === 'hard' ? false : platform.movable,
-    })),
+    platforms: level.platforms.map((platform) => ({ ...platform })),
     selectedPlatform: null,
     splitPart: null,
-    weapons: mode === 'pve' ? createWeapons(level) : [],
-    pve: mode === 'pve' ? { wave: 1, totalWaves: TOTAL_WAVES, nextWaveIn: 0, complete: false } : null,
     stars: level.stars.map(() => false),
-    enemies: mode === 'pve'
-      ? createWaveEnemies(level, 1)
-      : level.enemies.map((enemy, index) => ({
-        ...enemy, vx: 0, vy: 0, theme: level.enemyTheme, phase: index * 37,
-      })),
+    discoveredSecrets: level.secrets.map(() => false),
+    enemies: level.enemies.map((enemy, index) => ({
+      ...enemy, vx: 0, vy: 0, theme: level.enemyTheme, phase: index * 37,
+      health: 2, attackTimer: 30 + index * 18,
+    })),
+    enemyStrategy: DEFAULT_ENEMY_STRATEGY,
     won: false,
+    lost: false,
   };
 }
 
@@ -48,40 +48,46 @@ export function updateGame(
   level: Level,
   keys: Set<string>,
   actions: GameActions,
-  mode: GameMode = 'normal',
+  controls: ControlScheme,
 ) {
   const player = state.player;
-  const usingTelekinesis = updatePlatformTelekinesis(state, keys);
-  if (mode === 'pve') updatePveCombat(state, level, actions.power);
-  else if (actions.power) pushEnemies(state);
+  recoverEnergy(player, keys.has('e'));
+  if (actions.power && hasEnergy(player, PUSH_ENERGY_COST) && pushEnemies(state)) {
+    spendEnergy(player, PUSH_ENERGY_COST);
+  }
+  const canMovePlatform = hasEnergy(player, TELEKINESIS_DRAIN);
+  const usingTelekinesis = updatePlatformTelekinesis(state, keys, canMovePlatform, controls);
+  if (usingTelekinesis) spendEnergy(player, TELEKINESIS_DRAIN);
   updateSplitJump(state, actions.split);
   if (usingTelekinesis) player.vx *= 0.7;
-  else movePlayer(state, keys, actions.jump);
-  applyGravityAndCollisions(state);
+  else movePlayer(state, keys, actions.jump, controls);
+  applyGravityAndCollisions(state, level.width);
   updateSlimePhysics(player);
-  if (player.y > 720) resetPlayer(state, level);
+  if (player.y > level.height + 120) resetPlayer(state, level);
   collectStars(state, level);
-  updateEnemies(state, mode);
+  discoverSecrets(state, level);
+  updateEnemies(state, level);
   player.pulse = Math.max(0, player.pulse - 1);
-  const objectivesComplete = state.stars.every(Boolean) && (mode !== 'pve' || state.pve?.complete);
+  player.invulnerableFrames = Math.max(0, player.invulnerableFrames - 1);
+  const objectivesComplete = state.stars.every(Boolean);
   if (objectivesComplete && Math.hypot(player.x - level.exit.x, player.y - level.exit.y) < 100) state.won = true;
 }
 
-function pushEnemies(state: GameState) {
-  const player = state.player;
-  player.pulse = 26;
-  state.enemies.forEach((enemy) => {
-    const dx = enemy.x - player.x;
-    if (Math.abs(dx) < 210 && Math.abs(enemy.y - player.y) < 140 && dx * player.facing > -30) {
-      enemy.vx = player.facing * 13;
-      enemy.vy = -7;
+function discoverSecrets(state: GameState, level: Level) {
+  const centerX = state.player.x + state.player.w / 2;
+  const centerY = state.player.y + state.player.h / 2;
+  level.secrets.forEach((secret, index) => {
+    if (centerX >= secret.trigger.x && centerX <= secret.trigger.x + secret.trigger.w
+      && centerY >= secret.trigger.y && centerY <= secret.trigger.y + secret.trigger.h) {
+      state.discoveredSecrets[index] = true;
     }
   });
 }
 
-function movePlayer(state: GameState, keys: Set<string>, jumpPressed: boolean) {
+function movePlayer(state: GameState, keys: Set<string>, jumpPressed: boolean, controls: ControlScheme) {
   const player = state.player;
-  const direction = inputAxis(keys, ['a', 'arrowleft'], ['d', 'arrowright']);
+  const direction = controls === 'wasd'
+    ? inputAxis(keys, ['a'], ['d']) : inputAxis(keys, ['arrowleft'], ['arrowright']);
   player.vx += direction === 0 ? -player.vx * 0.13 : direction * 0.62;
   player.vx = Math.max(-6, Math.min(6, player.vx));
   if (direction) player.facing = direction;
@@ -99,10 +105,10 @@ function movePlayer(state: GameState, keys: Set<string>, jumpPressed: boolean) {
   }
 }
 
-function applyGravityAndCollisions(state: GameState) {
+function applyGravityAndCollisions(state: GameState, worldWidth: number) {
   const player = state.player;
   player.vy = Math.min(player.vy + 0.7, 16);
-  player.x = Math.max(0, Math.min(WORLD_END - player.w, player.x + player.vx));
+  player.x = Math.max(0, Math.min(worldWidth - player.w, player.x + player.vx));
   player.y += player.vy;
   player.grounded = false;
   for (const platform of state.platforms) {
@@ -125,8 +131,15 @@ function applyGravityAndCollisions(state: GameState) {
 }
 
 function resetPlayer(state: GameState, level: Level) {
+  const health = state.player.health;
+  const energy = state.player.energy;
+  const energyRegenDelay = state.player.energyRegenDelay;
   const fresh = createState(level);
   Object.assign(state.player, fresh.player);
+  state.player.health = health;
+  state.player.energy = energy;
+  state.player.energyRegenDelay = energyRegenDelay;
+  state.player.invulnerableFrames = 60;
   state.splitPart = null;
   state.selectedPlatform = null;
 }

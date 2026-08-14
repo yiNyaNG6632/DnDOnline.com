@@ -1,4 +1,4 @@
-import type { GameState, Platform } from './types';
+import type { ControlScheme, GameState, Platform } from './types';
 
 const PLATFORM_SPEED = 3.5;
 const POWER_RANGE = 520;
@@ -9,15 +9,20 @@ function inputAxis(keys: Set<string>, negative: string[], positive: string[]) {
   return Number(high) - Number(low);
 }
 
-export function updatePlatformTelekinesis(state: GameState, keys: Set<string>) {
-  if (!keys.has('e')) {
+export function updatePlatformTelekinesis(
+  state: GameState,
+  keys: Set<string>,
+  canUsePower: boolean,
+  controls: ControlScheme,
+) {
+  if (!keys.has('e') || !canUsePower) {
     state.selectedPlatform = null;
     return false;
   }
 
   state.selectedPlatform = nearestMovablePlatform(state);
   if (state.selectedPlatform === null) return false;
-  movePlatform(state, state.platforms[state.selectedPlatform], keys);
+  movePlatform(state, state.platforms[state.selectedPlatform], keys, controls);
   return true;
 }
 
@@ -38,13 +43,15 @@ function nearestMovablePlatform(state: GameState) {
   return nearestIndex;
 }
 
-function movePlatform(state: GameState, platform: Platform, keys: Set<string>) {
+function movePlatform(state: GameState, platform: Platform, keys: Set<string>, controls: ControlScheme) {
   const area = platform.moveArea;
   if (!area) return;
   const oldX = platform.x;
   const oldY = platform.y;
-  const horizontal = inputAxis(keys, ['a', 'arrowleft'], ['d', 'arrowright']);
-  const vertical = inputAxis(keys, ['w', 'arrowup'], ['s', 'arrowdown']);
+  const horizontal = controls === 'wasd'
+    ? inputAxis(keys, ['a'], ['d']) : inputAxis(keys, ['arrowleft'], ['arrowright']);
+  const vertical = controls === 'wasd'
+    ? inputAxis(keys, ['w'], ['s']) : inputAxis(keys, ['arrowup'], ['arrowdown']);
   platform.x = Math.max(area.minX, Math.min(area.maxX, platform.x + horizontal * PLATFORM_SPEED));
   platform.y = Math.max(area.minY, Math.min(area.maxY, platform.y + vertical * PLATFORM_SPEED));
   carryRider(state, platform, platform.x - oldX, platform.y - oldY, oldX, oldY);

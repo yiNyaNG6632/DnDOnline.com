@@ -1,11 +1,18 @@
 export type Rect = { x: number; y: number; w: number; h: number };
 export type Point = { x: number; y: number };
-export type GameMode = 'normal' | 'hard' | 'pve';
+export type ControlScheme = 'arrows' | 'wasd';
 export type EnemyTheme = 'bedroom' | 'workshop' | 'attic' | 'clockwork' | 'studio' | 'dream' | 'greenhouse' | 'theatre' | 'storm';
 
 export type Platform = Rect & {
   movable?: boolean;
+  scenery?: 'floor' | 'wood' | 'fabric';
   moveArea?: { minX: number; maxX: number; minY: number; maxY: number };
+};
+
+export type SecretArea = {
+  name: string;
+  trigger: Rect;
+  entrance: Rect;
 };
 
 export type Level = {
@@ -16,6 +23,10 @@ export type Level = {
   accent: string;
   enemyTheme: EnemyTheme;
   gimmick: string;
+  width: number;
+  height: number;
+  spawn: Point;
+  secrets: SecretArea[];
   platforms: Platform[];
   stars: Point[];
   enemies: Point[];
@@ -34,6 +45,10 @@ export type Player = Rect & {
   slimeSquash: number;
   slimeSquashSpeed: number;
   slimeTilt: number;
+  health: number;
+  invulnerableFrames: number;
+  energy: number;
+  energyRegenDelay: number;
 };
 
 export type TelekineticObject = Point & {
@@ -41,6 +56,17 @@ export type TelekineticObject = Point & {
   vy: number;
   theme: EnemyTheme;
   phase: number;
+  health: number;
+  attackTimer: number;
+};
+
+export type EnemyStrategy = {
+  name: string;
+  taunt: string;
+  speed: number;
+  aggression: number;
+  attackInterval: number;
+  jumpForce: number;
 };
 
 export type SplitPart = Point & {
@@ -48,32 +74,15 @@ export type SplitPart = Point & {
   age: number;
 };
 
-export type Weapon = Point & {
-  id: number;
-  kind: 'mallet' | 'spear';
-  vx: number;
-  vy: number;
-  rotation: number;
-  status: 'ready' | 'held' | 'thrown';
-  homeX: number;
-  homeY: number;
-};
-
-export type PveProgress = {
-  wave: number;
-  totalWaves: number;
-  nextWaveIn: number;
-  complete: boolean;
-};
-
 export type GameState = {
   player: Player;
   platforms: Platform[];
   selectedPlatform: number | null;
   splitPart: SplitPart | null;
-  weapons: Weapon[];
-  pve: PveProgress | null;
   stars: boolean[];
+  discoveredSecrets: boolean[];
   enemies: TelekineticObject[];
+  enemyStrategy: EnemyStrategy;
   won: boolean;
+  lost: boolean;
 };

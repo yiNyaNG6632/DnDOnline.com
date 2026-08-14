@@ -1,79 +1,140 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'wouter';
 import { GameCanvas } from '../components/GameCanvas';
+import { StatusBar } from '../components/StatusBar';
 import { levels } from '../game/levels';
-import type { GameMode } from '../game/types';
+import type { ControlScheme } from '../game/types';
 
-type Props = { mode?: GameMode };
+const LOADING_ENEMY_PLAN = {
+  name: 'Enemy AI loading…', taunt: 'The shadows are choosing how to hunt you.', ai: false,
+};
 
-export function GamePage({ mode = 'normal' }: Props) {
+export function GamePage() {
   const [levelIndex, setLevelIndex] = useState(0);
   const [stars, setStars] = useState(0);
-  const [enemiesLeft, setEnemiesLeft] = useState(levels[0].enemies.length);
-  const [wave, setWave] = useState(1);
-  const [wavesComplete, setWavesComplete] = useState(false);
+  const [health, setHealth] = useState(3);
+  const [energy, setEnergy] = useState(100);
+  const [controls, setControls] = useState<ControlScheme>('arrows');
+  const [paused, setPaused] = useState(false);
+  const [defeated, setDefeated] = useState(false);
+  const [runId, setRunId] = useState(0);
+  const [enemyPlan, setEnemyPlan] = useState(LOADING_ENEMY_PLAN);
   const [finished, setFinished] = useState(false);
   const level = levels[levelIndex];
 
   const handleProgress = useCallback((count: number) => setStars(count), []);
-  const handleCombatChange = useCallback((currentWave: number, count: number, complete: boolean) => {
-    setWave(currentWave);
-    setEnemiesLeft(count);
-    setWavesComplete(complete);
+  const handleStrategy = useCallback((name: string, taunt: string, ai: boolean) => {
+    setEnemyPlan({ name, taunt, ai });
   }, []);
+  const handleLose = useCallback(() => { setPaused(false); setDefeated(true); }, []);
   const handleWin = useCallback(() => {
-    if (levelIndex === levels.length - 1) setFinished(true);
+    if (levelIndex === levels.length - 1) { setPaused(false); setFinished(true); }
     else {
       setStars(0);
-      setEnemiesLeft(levels[levelIndex + 1].enemies.length);
-      setWave(1);
-      setWavesComplete(false);
+      setHealth(3);
+      setEnergy(100);
+      setEnemyPlan(LOADING_ENEMY_PLAN);
       setLevelIndex((current) => current + 1);
     }
   }, [levelIndex]);
 
+  useEffect(() => {
+    const togglePause = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !defeated && !finished) setPaused((current) => !current);
+    };
+    window.addEventListener('keydown', togglePause);
+    return () => window.removeEventListener('keydown', togglePause);
+  }, [defeated, finished]);
+
   const restart = () => {
     setStars(0);
-    setEnemiesLeft(levels[0].enemies.length);
-    setWave(1);
-    setWavesComplete(false);
+    setHealth(3);
+    setEnergy(100);
+    setDefeated(false);
+    setPaused(false);
     setFinished(false);
+    setEnemyPlan(LOADING_ENEMY_PLAN);
+    setRunId((current) => current + 1);
     setLevelIndex(0);
   };
-  const hint = getHint(mode, stars, enemiesLeft, wavesComplete, level.hint, level.gimmick);
+  const retry = () => {
+    setHealth(3);
+    setEnergy(100);
+    setDefeated(false);
+    setPaused(false);
+    setEnemyPlan(LOADING_ENEMY_PLAN);
+    setRunId((current) => current + 1);
+  };
+  const hint = stars === 3 ? 'The door is awake. Find it.' : enemyPlan.taunt;
 
   return (
     <main className="game-page" style={{ '--level-accent': level.accent } as React.CSSProperties}>
-      <header className="game-header">
-        <Link href="/" className="game-brand"><i /> TELECINE</Link>
-        <div className="room-title">
-          <small>{level.chapter}{mode !== 'normal' && <b>{mode === 'pve' ? 'PvE mode' : 'Hard mode'}</b>}</small>
-          <strong>{level.name}</strong>
-        </div>
-        <div className="memory-count" aria-label={`${stars} of 3 memories`}>
-          {[0, 1, 2].map((item) => <i className={item < stars ? 'found' : ''} key={item}>✦</i>)}
-          <span>MEMORIES</span>
-        </div>
-      </header>
       <section className="game-frame">
         <GameCanvas
+          key={`${levelIndex}-${runId}`}
           level={level}
           levelIndex={levelIndex}
-          mode={mode}
+          controls={controls}
+          paused={paused}
           onProgress={handleProgress}
-          onCombatChange={handleCombatChange}
+          onHealthChange={setHealth}
+          onEnergyChange={setEnergy}
+          onStrategyChange={handleStrategy}
+          onLose={handleLose}
           onWin={handleWin}
         />
+        <div className="game-hud">
+          <div className="game-player-status">
+            <div className="game-brand-row">
+              <Link href="/" className="game-brand"><i /> TELECINE</Link>
+              <button className="pause-button" onClick={() => setPaused(true)}>Pause</button>
+            </div>
+            <StatusBar label="Health" value={health} max={3} tone="health" />
+            <StatusBar label="Energy" value={energy} max={100} tone="energy" />
+          </div>
+          <div className="room-title">
+            <small>{level.chapter}</small>
+            <strong>{level.name}</strong>
+          </div>
+          <div className="memory-count" aria-label={`${stars} of 3 memories`}>
+            {[0, 1, 2].map((item) => <i className={item < stars ? 'found' : ''} key={item}>✦</i>)}
+            <span>MEMORIES</span>
+          </div>
+        </div>
         <div className="hint-card">
-          <b>{mode === 'pve' ? `WAVE ${wave}/3 · ${enemiesLeft} LEFT` : mode === 'hard' ? 'HARD MODE' : 'WHISPER'}</b>
+          <b>{enemyPlan.ai ? 'GEMINI TACTIC' : 'ENEMY TACTIC'} · {enemyPlan.name}</b>
           <span>{hint}</span>
         </div>
+        {paused && (
+          <div className="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title">
+            <div className="pause-card">
+              <small>GAME PAUSED</small>
+              <h2 id="pause-title">Controls</h2>
+              <div className="control-switch">
+                <button className={controls === 'arrows' ? 'active' : ''} onClick={() => setControls('arrows')}>Arrow keys</button>
+                <button className={controls === 'wasd' ? 'active' : ''} onClick={() => setControls('wasd')}>WASD</button>
+              </div>
+              <p>Movement and <kbd>E</kbd> platform control use this layout.</p>
+              <button className="resume-button" onClick={() => setPaused(false)}>Resume</button>
+            </div>
+          </div>
+        )}
       </section>
       <div className="game-help">
-        <span><kbd>W</kbd> JUMP</span><span><kbd>Q</kbd> SPLIT ×3</span>
-        <span><kbd>W</kbd> BOUNCE &amp; REPEAT</span>
-        <span><kbd>E</kbd> {mode === 'pve' ? 'PICK UP / THROW' : mode === 'hard' ? 'PUSH CREATURES' : '+ WASD MOVE PLATFORM'}</span>
+        <span><kbd>{controls === 'wasd' ? 'W' : '↑'}</kbd> JUMP</span><span><kbd>Q</kbd> SPLIT ×3</span>
+        <span><kbd>E</kbd> PUSH ENEMIES</span>
+        <span><kbd>E</kbd> + {controls === 'wasd' ? 'WASD' : 'ARROWS'} MOVE PLATFORM</span>
       </div>
+      {defeated && (
+        <div className="ending">
+          <div className="ending__card">
+            <span className="ending__star">☾</span><p>THE SHADOWS CAUGHT PIP</p>
+            <h1>Try a different path<br />or push them <em>away.</em></h1>
+            <button onClick={retry}>Try again <b>↻</b></button>
+            <Link href="/">Back to the title</Link>
+          </div>
+        </div>
+      )}
       {finished && (
         <div className="ending">
           <div className="ending__card">
@@ -86,20 +147,4 @@ export function GamePage({ mode = 'normal' }: Props) {
       )}
     </main>
   );
-}
-
-function getHint(
-  mode: GameMode,
-  stars: number,
-  enemiesLeft: number,
-  wavesComplete: boolean,
-  levelHint: string,
-  gimmick: string,
-) {
-  if (mode === 'pve' && enemiesLeft === 0 && !wavesComplete) return 'Wave cleared. Brace for the next attack!';
-  if (mode === 'pve' && enemiesLeft > 0) return gimmick;
-  if (stars === 3) return 'The door is awake. Find it.';
-  if (mode === 'pve' && wavesComplete) return 'All waves cleared. Collect the remaining memories.';
-  if (mode === 'hard') return 'Platforms are locked. Trust your split jump.';
-  return levelHint;
 }

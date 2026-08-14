@@ -8,8 +8,6 @@ export default function App() {
   return (
     <Switch>
       <Route path="/" component={HomePage} />
-      <Route path="/game/hard"><GamePage mode="hard" /></Route>
-      <Route path="/game/pve"><GamePage mode="pve" /></Route>
       <Route path="/game"><GamePage /></Route>
       <Route component={NotFoundPage} />
     </Switch>
