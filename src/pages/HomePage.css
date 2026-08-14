@@ -12,7 +12,12 @@
 .menu-button:hover { transform: translateY(-2px); border-color: #ffdc8e; background: rgba(54, 45, 48, .93); }
 .menu-button--play { display: flex; min-height: 61px; align-items: center; justify-content: center; gap: 18px; color: #35212e; border: 0; border-radius: 16px 9px 17px 11px; background: linear-gradient(145deg, #ffe79d, #ffc85e); box-shadow: inset 3px 3px 4px #fff3c6, 6px 7px 0 #c9524b, 0 16px 30px #10191d; font-size: 16px; }
 .menu-button--play:hover { background: linear-gradient(145deg, #ffedaf, #ffd16e); border-color: transparent; }
+.menu-button--play:disabled { cursor: wait; opacity: .75; transform: none; }
 .menu-button--play b { font-size: 13px; }
+.menu-button--guest { display: grid; place-items: center; color: #ffdd91; border-color: #ffdc8e80; }
+.menu-button--signout { min-height: 34px; border: 0; color: #c8bac9; background: transparent; box-shadow: none; font-size: 9px; }
+.home-menu__player { overflow: hidden; color: #c8bac9; font: 500 9px 'DM Mono'; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
+.home-menu__player strong { color: #ffdd91; font-weight: 500; }
 .home-menu__footer { position: absolute; z-index: 2; bottom: 25px; color: #e5d8c6; font: 500 8px 'DM Mono'; letter-spacing: .16em; text-transform: uppercase; }
 .menu-modal { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(12, 14, 19, .72); backdrop-filter: blur(8px); }
 .menu-modal__card { position: relative; width: min(470px, 100%); padding: 42px; border: 1px solid #ffe6b059; border-radius: 24px 17px 27px 18px; background: radial-gradient(circle at 20% 0, #594355, #27202e 65%); box-shadow: 0 30px 80px #07090c; }
@@ -21,6 +26,23 @@
 .menu-modal h2 { margin-bottom: 26px; font: 700 38px/1.02 'Fraunces'; }
 .control-row { display: grid; grid-template-columns: 42px 58px 1fr; align-items: center; min-height: 48px; border-bottom: 1px solid #ffffff17; color: #e9dfe8; font-size: 12px; }
 .control-row kbd + span { grid-column: 3; }.control-row kbd { background: #19151f; }.menu-modal__hint, .menu-modal__copy { margin-top: 24px; color: #bdb1be; font-size: 12px; line-height: 1.7; }
+.auth-panel { text-align: left; }
+.auth-panel h2 { margin-bottom: 8px; }
+.auth-panel__intro { margin-bottom: 22px; color: #bdb1be; font-size: 12px; }
+.auth-panel__google { display: flex; width: 100%; min-height: 46px; align-items: center; justify-content: center; gap: 11px; border: 1px solid #ddd6e0; border-radius: 10px; color: #2d2530; background: #fff; font-size: 12px; font-weight: 800; cursor: pointer; }
+.auth-panel__google:hover { background: #f7f2f8; }
+.auth-panel__google:disabled { cursor: wait; opacity: .7; }
+.auth-panel__google span { color: #4285f4; font: 800 17px Arial, sans-serif; }
+.auth-panel__divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 10px; color: #9f91a2; font: 500 8px 'DM Mono'; letter-spacing: .1em; text-transform: uppercase; }
+.auth-panel__divider::before, .auth-panel__divider::after { content: ''; height: 1px; flex: 1; background: #ffffff20; }
+.auth-panel__form { display: grid; gap: 8px; }
+.auth-panel__form label { margin-top: 5px; color: #ffdd91; font: 500 9px 'DM Mono'; letter-spacing: .12em; text-transform: uppercase; }
+.auth-panel__form input { width: 100%; min-height: 45px; padding: 0 14px; border: 1px solid #ffffff38; border-radius: 10px; outline: none; color: #fff8e9; background: #19151fcc; font: 600 13px 'Manrope'; }
+.auth-panel__form input:focus { border-color: #ffca68; box-shadow: 0 0 0 3px #ffca6820; }
+.auth-panel__form button { min-height: 48px; margin-top: 12px; border: 0; border-radius: 12px; color: #35212e; background: linear-gradient(145deg, #ffe79d, #ffc85e); font-size: 12px; font-weight: 800; text-transform: uppercase; cursor: pointer; }
+.auth-panel__form button:disabled { cursor: wait; opacity: .7; }
+.auth-panel__message { margin-top: 14px; color: #ffd689; font-size: 11px; line-height: 1.5; }
+.auth-panel__switch { width: 100%; margin-top: 18px; border: 0; color: #d8cbd9; background: transparent; font-size: 11px; text-decoration: underline; cursor: pointer; }
 @keyframes menu-in { from { opacity: 0; transform: translateY(15px) scale(.98); } }
 
 @media (max-width: 600px) {

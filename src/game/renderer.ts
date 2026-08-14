@@ -22,7 +22,9 @@ export function renderGame(
   if (image.complete && image.naturalWidth > 0) ctx.drawImage(image, 0, 0, 3000, 2000);
   drawSecretAreas(ctx, state, level);
   level.stars.forEach((star, index) => {
-    if (!state.stars[index]) drawStar(ctx, star.x, star.y, level.accent);
+    if (!state.stars[index] && !isInsideHiddenSecret(state, level, star.x, star.y)) {
+      drawStar(ctx, star.x, star.y, level.accent);
+    }
   });
   state.enemies.forEach((enemy) => drawThemedEnemy(ctx, enemy, level.accent));
   const exitOpen = state.stars.every(Boolean);
@@ -49,6 +51,7 @@ function drawRoomMap(ctx: CanvasRenderingContext2D, state: GameState, level: Lev
   const scaleX = (w - 20) / bounds.w; const scaleY = (h - 20) / bounds.h;
   ctx.strokeStyle = '#8c789666'; ctx.lineWidth = 2;
   state.platforms.filter((platform) => platform.w > 175
+    && !isInsideHiddenSecret(state, level, platform.x + platform.w / 2, platform.y + 1)
     && platform.x < bounds.x + bounds.w && platform.x + platform.w > bounds.x
     && platform.y >= bounds.y && platform.y <= bounds.y + bounds.h).forEach((platform) => {
     ctx.beginPath(); ctx.moveTo((platform.x - bounds.x) * scaleX, (platform.y - bounds.y) * scaleY);
@@ -64,6 +67,12 @@ function drawRoomMap(ctx: CanvasRenderingContext2D, state: GameState, level: Lev
   ctx.fillStyle = level.accent; ctx.shadowColor = level.accent; ctx.shadowBlur = 8;
   ctx.beginPath(); ctx.arc((state.player.x + 24 - bounds.x) * scaleX, (state.player.y + 31 - bounds.y) * scaleY, 3, 0, Math.PI * 2); ctx.fill();
   ctx.restore(); ctx.shadowBlur = 0;
+}
+
+function isInsideHiddenSecret(state: GameState, level: Level, x: number, y: number) {
+  return level.secrets.some((secret, index) => !state.discoveredSecrets[index]
+    && x >= secret.room.x && x <= secret.room.x + secret.room.w
+    && y > secret.room.y + 40 && y <= secret.room.y + secret.room.h);
 }
 
 function drawStar(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {

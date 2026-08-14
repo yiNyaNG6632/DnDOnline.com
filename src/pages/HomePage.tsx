@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { Auth } from '../components/Auth';
+import { usePlayerSession } from '../lib/usePlayerSession';
 import './HomePage.css';
 
-type OpenPanel = 'controls' | 'about' | null;
+type OpenPanel = 'auth' | 'controls' | 'about' | null;
 
 export function HomePage() {
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
+  const [, navigate] = useLocation();
+  const { user, isLoading, signOut } = usePlayerSession();
 
   return (
     <main className="home-menu">
@@ -17,9 +21,26 @@ export function HomePage() {
         <p className="home-menu__tagline">Small body. Big thoughts.</p>
 
         <nav className="home-menu__buttons" aria-label="Main menu">
-          <Link href="/game" className="menu-button menu-button--play">
-            <span>Play</span><b>▶</b>
-          </Link>
+          {user ? (
+            <>
+              <p className="home-menu__player">Signed in as <strong>{user.email ?? 'Player'}</strong></p>
+              <Link href="/game" className="menu-button menu-button--play">
+                <span>Continue playing</span><b>▶</b>
+              </Link>
+              <button className="menu-button menu-button--signout" onClick={() => void signOut()}>Sign out</button>
+            </>
+          ) : (
+            <>
+              <button
+                className="menu-button menu-button--play"
+                onClick={() => setOpenPanel('auth')}
+                disabled={isLoading}
+              >
+                <span>{isLoading ? 'Remembering player…' : 'Register & play'}</span><b>▶</b>
+              </button>
+              <Link href="/game" className="menu-button menu-button--guest">Play as guest</Link>
+            </>
+          )}
           <button className="menu-button" onClick={() => setOpenPanel('controls')}>How to play</button>
           <button className="menu-button" onClick={() => setOpenPanel('about')}>About</button>
         </nav>
@@ -31,7 +52,9 @@ export function HomePage() {
         <div className="menu-modal" role="dialog" aria-modal="true" aria-labelledby="menu-modal-title">
           <div className="menu-modal__card">
             <button className="menu-modal__close" onClick={() => setOpenPanel(null)} aria-label="Close">×</button>
-            {openPanel === 'controls' ? <Controls /> : <About />}
+            {openPanel === 'auth' && <Auth onSuccess={() => navigate('/game')} />}
+            {openPanel === 'controls' && <Controls />}
+            {openPanel === 'about' && <About />}
           </div>
         </div>
       )}

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
+import { FullscreenButton } from '../components/FullscreenButton';
 import { GameCanvas } from '../components/GameCanvas';
 import { StatusBar } from '../components/StatusBar';
 import { levels } from '../game/levels';
@@ -10,6 +11,7 @@ const LOADING_ENEMY_PLAN = {
 };
 
 export function GamePage() {
+  const gameFrameRef = useRef<HTMLElement>(null);
   const [levelIndex, setLevelIndex] = useState(0);
   const [stars, setStars] = useState(0);
   const [health, setHealth] = useState(3);
@@ -40,6 +42,7 @@ export function GamePage() {
 
   useEffect(() => {
     const togglePause = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && document.fullscreenElement) return;
       if (event.key === 'Escape' && !defeated && !finished) setPaused((current) => !current);
     };
     window.addEventListener('keydown', togglePause);
@@ -69,7 +72,7 @@ export function GamePage() {
 
   return (
     <main className="game-page" style={{ '--level-accent': level.accent } as React.CSSProperties}>
-      <section className="game-frame">
+      <section className="game-frame" ref={gameFrameRef}>
         <GameCanvas
           key={`${levelIndex}-${runId}`}
           level={level}
@@ -87,7 +90,10 @@ export function GamePage() {
           <div className="game-player-status">
             <div className="game-brand-row">
               <Link href="/" className="game-brand"><i /> TELECINE</Link>
-              <button className="pause-button" onClick={() => setPaused(true)}>Pause</button>
+              <div className="game-frame-actions">
+                <FullscreenButton target={gameFrameRef} />
+                <button className="pause-button" onClick={() => setPaused(true)}>Pause</button>
+              </div>
             </div>
             <StatusBar label="Health" value={health} max={3} tone="health" />
             <StatusBar label="Energy" value={energy} max={100} tone="energy" />

@@ -18,17 +18,27 @@ export function updateSecretAreas(state: GameState, level: Level) {
 
 export function drawSecretAreas(ctx: CanvasRenderingContext2D, state: GameState, level: Level) {
   level.secrets.forEach((secret, index) => {
+    if (!state.discoveredSecrets[index]) {
+      concealRoom(ctx, secret);
+      return;
+    }
     drawRoom(ctx, secret, state.activeSecret === index);
-    drawEntrance(ctx, secret, state.discoveredSecrets[index]);
+    drawEntrance(ctx, secret);
   });
 }
 
-function drawEntrance(ctx: CanvasRenderingContext2D, secret: SecretArea, discovered: boolean) {
+function concealRoom(ctx: CanvasRenderingContext2D, secret: SecretArea) {
+  const { x, y, w, h } = secret.room;
+  ctx.fillStyle = '#17101e';
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawEntrance(ctx: CanvasRenderingContext2D, secret: SecretArea) {
   const { x, y, w } = secret.entrance;
   ctx.save();
   ctx.fillStyle = '#0d0913bb';
   ctx.fillRect(x, y, w, 18);
-  ctx.strokeStyle = discovered ? '#ffbd7255' : '#76657d25';
+  ctx.strokeStyle = '#ffbd7255';
   ctx.setLineDash([8, 12]);
   ctx.beginPath(); ctx.moveTo(x + 6, y + 3); ctx.lineTo(x + w - 6, y + 3); ctx.stroke();
   ctx.restore();

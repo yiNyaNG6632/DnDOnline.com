@@ -14,7 +14,9 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
 .game-hud .game-brand, .game-hud button { pointer-events: auto; }
 .game-brand { font-size: 10px; letter-spacing: .14em; font-weight: 800; }
 .game-brand-row { width: 100%; display: flex; align-items: center; justify-content: space-between; }
-.pause-button { padding: 3px 6px; border: 1px solid #66546b; border-radius: 5px; color: #b9abbc; background: #1a1125cc; font: 500 7px 'DM Mono'; text-transform: uppercase; cursor: pointer; }
+.game-frame-actions { display: flex; gap: 5px; }
+.pause-button, .fullscreen-button { padding: 3px 6px; border: 1px solid #66546b; border-radius: 5px; color: #b9abbc; background: #1a1125cc; font: 500 7px 'DM Mono'; text-transform: uppercase; cursor: pointer; }
+.fullscreen-button { width: 24px; font-size: 11px; }
 .game-player-status { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; width: 150px; }
 .status-bar { width: 100%; color: #9b8da0; font: 500 7px 'DM Mono'; letter-spacing: .1em; text-transform: uppercase; }
 .status-bar > span { display: flex; justify-content: space-between; margin-bottom: 2px; }
@@ -31,6 +33,8 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
 .memory-count i { color: #55475c; font-style: normal; } .memory-count i.found { color: var(--level-accent); text-shadow: 0 0 10px var(--level-accent); }
 .memory-count span { grid-column: 1 / 4; color: #7d7081; font: 8px 'DM Mono'; letter-spacing: .13em; }
 .game-frame { max-width: 1180px; margin: auto; position: relative; padding: 10px; border: 1px solid #493b50; border-radius: 26px; background: #24182c; box-shadow: 0 28px 80px #08050b; }
+.game-frame:fullscreen { width: 100vw; max-width: none; height: 100vh; padding: 0; border: 0; border-radius: 0; background: #17101e; box-shadow: none; }
+.game-frame:fullscreen .game-stage { width: 100%; height: 100%; border-radius: 0; aspect-ratio: auto; }
 .game-stage { overflow: hidden; position: relative; border-radius: 18px; aspect-ratio: 20 / 13; background: #24182c; }
 .game-stage canvas { display: block; width: 100%; height: 100%; }
 .power-buttons { position: absolute; right: 18px; bottom: 18px; display: flex; gap: 7px; }
