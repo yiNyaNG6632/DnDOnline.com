@@ -22,7 +22,7 @@ export function renderGame(
   if (image.complete && image.naturalWidth > 0) ctx.drawImage(image, 0, 0, 3000, 2000);
   drawSecretAreas(ctx, state, level);
   level.stars.forEach((star, index) => {
-    if (!state.stars[index] && !isInsideHiddenSecret(state, level, star.x, star.y)) {
+    if (!state.stars[index] && !isInsideInactiveSecret(state, level, star.x, star.y)) {
       drawStar(ctx, star.x, star.y, level.accent);
     }
   });
@@ -51,16 +51,11 @@ function drawRoomMap(ctx: CanvasRenderingContext2D, state: GameState, level: Lev
   const scaleX = (w - 20) / bounds.w; const scaleY = (h - 20) / bounds.h;
   ctx.strokeStyle = '#8c789666'; ctx.lineWidth = 2;
   state.platforms.filter((platform) => platform.w > 175
-    && !isInsideHiddenSecret(state, level, platform.x + platform.w / 2, platform.y + 1)
+    && !isInsideInactiveSecret(state, level, platform.x + platform.w / 2, platform.y + 1)
     && platform.x < bounds.x + bounds.w && platform.x + platform.w > bounds.x
     && platform.y >= bounds.y && platform.y <= bounds.y + bounds.h).forEach((platform) => {
     ctx.beginPath(); ctx.moveTo((platform.x - bounds.x) * scaleX, (platform.y - bounds.y) * scaleY);
     ctx.lineTo((platform.x + platform.w - bounds.x) * scaleX, (platform.y - bounds.y) * scaleY); ctx.stroke();
-  });
-  level.secrets.forEach((secret, index) => {
-    if (!state.discoveredSecrets[index] || state.activeSecret !== null) return;
-    ctx.fillStyle = level.accent;
-    ctx.fillRect((secret.entrance.x - bounds.x) * scaleX - 2, (secret.entrance.y - bounds.y) * scaleY - 2, 5, 5);
   });
   ctx.strokeStyle = '#ffffff22';
   ctx.strokeRect((cameraX - bounds.x) * scaleX, (cameraY - bounds.y) * scaleY, WIDTH * scaleX, HEIGHT * scaleY);
@@ -69,8 +64,8 @@ function drawRoomMap(ctx: CanvasRenderingContext2D, state: GameState, level: Lev
   ctx.restore(); ctx.shadowBlur = 0;
 }
 
-function isInsideHiddenSecret(state: GameState, level: Level, x: number, y: number) {
-  return level.secrets.some((secret, index) => !state.discoveredSecrets[index]
+function isInsideInactiveSecret(state: GameState, level: Level, x: number, y: number) {
+  return level.secrets.some((secret, index) => state.activeSecret !== index
     && x >= secret.room.x && x <= secret.room.x + secret.room.w
     && y > secret.room.y + 40 && y <= secret.room.y + secret.room.h);
 }

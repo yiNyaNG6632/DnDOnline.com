@@ -18,33 +18,11 @@ export function updateSecretAreas(state: GameState, level: Level) {
 
 export function drawSecretAreas(ctx: CanvasRenderingContext2D, state: GameState, level: Level) {
   level.secrets.forEach((secret, index) => {
-    if (!state.discoveredSecrets[index]) {
-      concealRoom(ctx, secret);
-      return;
-    }
-    drawRoom(ctx, secret, state.activeSecret === index);
-    drawEntrance(ctx, secret);
+    if (state.activeSecret === index) drawRoom(ctx, secret);
   });
 }
 
-function concealRoom(ctx: CanvasRenderingContext2D, secret: SecretArea) {
-  const { x, y, w, h } = secret.room;
-  ctx.fillStyle = '#17101e';
-  ctx.fillRect(x, y, w, h);
-}
-
-function drawEntrance(ctx: CanvasRenderingContext2D, secret: SecretArea) {
-  const { x, y, w } = secret.entrance;
-  ctx.save();
-  ctx.fillStyle = '#0d0913bb';
-  ctx.fillRect(x, y, w, 18);
-  ctx.strokeStyle = '#ffbd7255';
-  ctx.setLineDash([8, 12]);
-  ctx.beginPath(); ctx.moveTo(x + 6, y + 3); ctx.lineTo(x + w - 6, y + 3); ctx.stroke();
-  ctx.restore();
-}
-
-function drawRoom(ctx: CanvasRenderingContext2D, secret: SecretArea, active: boolean) {
+function drawRoom(ctx: CanvasRenderingContext2D, secret: SecretArea) {
   const { x, y, w, h } = secret.room;
   const gradient = ctx.createLinearGradient(x, y, x, y + h);
   gradient.addColorStop(0, '#17101e');
@@ -53,7 +31,6 @@ function drawRoom(ctx: CanvasRenderingContext2D, secret: SecretArea, active: boo
   ctx.strokeStyle = '#9e879733'; ctx.lineWidth = 8; ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
   ctx.fillStyle = '#ffffff0a';
   for (let offset = 90; offset < w; offset += 135) ctx.fillRect(x + offset, y + 60, 3, h - 100);
-  if (!active) return;
   ctx.fillStyle = '#e9d8e7aa'; ctx.font = '11px DM Mono'; ctx.textAlign = 'center';
   ctx.fillText(secret.name.toUpperCase(), x + w / 2, y + 105);
 }

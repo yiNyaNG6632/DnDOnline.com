@@ -11,25 +11,31 @@ export type RoomLayout = {
   exit: Point;
 };
 
+type RoomOptions = {
+  reverse?: boolean;
+  secretNames?: [string, string];
+};
+
 const surface = (x: number, y: number, w: number, dropThrough = true): Platform => (
   { x, y, w, h: 20, scenery: 'wood', dropThrough }
 );
 
-export function makeRoom(): RoomLayout {
-  return {
+export function makeRoom(options: RoomOptions = {}): RoomLayout {
+  const names = options.secretNames ?? ['The Drawer Hollow', 'Under the Bed'];
+  const room: RoomLayout = {
     width: 3000,
     height: 2500,
     spawn: { x: 80, y: 1435 },
     secrets: [
       {
-        name: 'The Drawer Hollow',
+        name: names[0],
         entrance: { x: 505, y: 1855, w: 130, h: 30 },
         trigger: { x: 90, y: 1920, w: 970, h: 500 },
         room: { x: 90, y: 1870, w: 970, h: 550 },
         kind: 'drawer',
       },
       {
-        name: 'Under the Bed',
+        name: names[1],
         entrance: { x: 2480, y: 1855, w: 180, h: 30 },
         trigger: { x: 1930, y: 1920, w: 980, h: 500 },
         room: { x: 1930, y: 1870, w: 980, h: 550 },
@@ -60,5 +66,28 @@ export function makeRoom(): RoomLayout {
     stars: [{ x: 690, y: 510 }, { x: 350, y: 2200 }, { x: 2800, y: 2200 }],
     enemies: [{ x: 370, y: 1460 }, { x: 1420, y: 1260 }, { x: 2240, y: 1040 }, { x: 2650, y: 1820 }],
     exit: { x: 2840, y: 190 },
+  };
+
+  return options.reverse ? reverseRoom(room) : room;
+}
+
+function reverseRoom(room: RoomLayout): RoomLayout {
+  const mirrorRect = <T extends { x: number; w: number }>(rect: T): T => (
+    { ...rect, x: room.width - rect.x - rect.w }
+  );
+
+  return {
+    ...room,
+    spawn: { ...room.spawn, x: room.width - room.spawn.x - 48 },
+    secrets: room.secrets.map((secret) => ({
+      ...secret,
+      entrance: mirrorRect(secret.entrance),
+      trigger: mirrorRect(secret.trigger),
+      room: mirrorRect(secret.room),
+    })),
+    platforms: room.platforms.map(mirrorRect),
+    stars: room.stars.map((star) => ({ ...star, x: room.width - star.x })),
+    enemies: room.enemies.map((enemy) => ({ ...enemy, x: room.width - enemy.x - 48 })),
+    exit: { ...room.exit, x: room.width - room.exit.x - 80 },
   };
 }
