@@ -5,6 +5,9 @@ import { GameCanvas } from '../components/GameCanvas';
 import { StatusBar } from '../components/StatusBar';
 import { levels } from '../game/levels';
 import type { ControlScheme } from '../game/types';
+import { useAchievementUnlocks } from '../lib/useAchievementUnlocks';
+import { useDailyStreak } from '../lib/useDailyStreak';
+import { usePlayerSession } from '../lib/usePlayerSession';
 
 const LOADING_ENEMY_PLAN = {
   name: 'Enemy AI loading…', taunt: 'The shadows are choosing how to hunt you.', ai: false,
@@ -22,9 +25,13 @@ export function GamePage() {
   const [runId, setRunId] = useState(0);
   const [enemyPlan, setEnemyPlan] = useState(LOADING_ENEMY_PLAN);
   const [finished, setFinished] = useState(false);
+  const [foundSecret, setFoundSecret] = useState(false);
+  const { user } = usePlayerSession();
+  const streak = useDailyStreak(user?.id, true);
   const level = levels[levelIndex];
 
   const handleProgress = useCallback((count: number) => setStars(count), []);
+  const handleSecretFound = useCallback(() => setFoundSecret(true), []);
   const handleStrategy = useCallback((name: string, taunt: string, ai: boolean) => {
     setEnemyPlan({ name, taunt, ai });
   }, []);
@@ -69,6 +76,9 @@ export function GamePage() {
     setRunId((current) => current + 1);
   };
   const hint = stars === 3 ? 'The door is awake. Find it.' : enemyPlan.taunt;
+  useAchievementUnlocks({
+    userId: user?.id, stars, foundSecret, levelIndex, finished, streakCurrent: streak?.current,
+  });
 
   return (
     <main className="game-page" style={{ '--level-accent': level.accent } as React.CSSProperties}>
@@ -82,6 +92,7 @@ export function GamePage() {
           onProgress={handleProgress}
           onHealthChange={setHealth}
           onEnergyChange={setEnergy}
+          onSecretFound={handleSecretFound}
           onStrategyChange={handleStrategy}
           onLose={handleLose}
           onWin={handleWin}
@@ -105,6 +116,7 @@ export function GamePage() {
           <div className="memory-count" aria-label={`${stars} of 3 memories`}>
             {[0, 1, 2].map((item) => <i className={item < stars ? 'found' : ''} key={item}>✦</i>)}
             <span>MEMORIES</span>
+            {streak && <small className="game-streak">🔥 {streak.current} DAY STREAK</small>}
           </div>
         </div>
         <div className="hint-card">
@@ -122,6 +134,7 @@ export function GamePage() {
               </div>
               <p>Tap Down to drop through ledges—or enter a hidden opening.</p>
               <button className="resume-button" onClick={() => setPaused(false)}>Resume</button>
+              <Link href="/" className="pause-title-button">Back to title</Link>
             </div>
           </div>
         )}

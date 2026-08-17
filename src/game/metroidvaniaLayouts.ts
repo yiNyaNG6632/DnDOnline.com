@@ -3,6 +3,7 @@ import type { Platform, Point, SecretArea } from './types';
 export type RoomLayout = {
   width: number;
   height: number;
+  backgroundHeight: number;
   spawn: Point;
   secrets: SecretArea[];
   platforms: Platform[];
@@ -25,6 +26,7 @@ export function makeRoom(options: RoomOptions = {}): RoomLayout {
   const room: RoomLayout = {
     width: 3000,
     height: 2500,
+    backgroundHeight: 2000,
     spawn: { x: 80, y: 1435 },
     secrets: [
       {
@@ -43,19 +45,17 @@ export function makeRoom(options: RoomOptions = {}): RoomLayout {
       },
     ],
     platforms: [
-      surface(0, 1870, 505, false), surface(505, 1870, 130),
-      surface(635, 1870, 1845, false), surface(2480, 1870, 180),
-      surface(2660, 1870, 340, false),
-      surface(0, 1510, 1110), surface(180, 1690, 280), surface(1130, 1415, 190),
+      surface(0, 1905, 505, false), surface(505, 1905, 130),
+      surface(635, 1905, 1845, false), surface(2480, 1905, 180),
+      surface(2660, 1905, 340, false),
+      surface(0, 1500, 1110), surface(180, 1690, 280), surface(1130, 1465, 190),
       surface(0, 1315, 1700), surface(1700, 1315, 1300),
-      surface(1070, 1090, 620), surface(1680, 1090, 1170),
-      surface(0, 1110, 900), surface(0, 895, 910), surface(0, 675, 960),
-      surface(590, 1090, 510), surface(590, 900, 355), surface(590, 705, 355),
-      surface(590, 570, 355), surface(360, 285, 1110),
-      surface(2020, 380, 405), surface(2220, 315, 760),
-      surface(2190, 605, 780), surface(2260, 875, 610),
-      surface(1810, 820, 360), surface(1780, 600, 360),
-      surface(1130, 650, 610), surface(1250, 520, 370),
+      surface(990, 1180, 650), surface(1620, 1135, 1300),
+      surface(0, 1138, 900), surface(0, 965, 1100), surface(0, 800, 1100),
+      surface(0, 568, 1470), surface(360, 283, 1110),
+      surface(2035, 345, 365), surface(2220, 315, 760),
+      surface(2035, 568, 965), surface(2120, 825, 690),
+      surface(1740, 795, 200),
       surface(1190, 1580, 150), surface(1130, 1690, 170), surface(1110, 1790, 180),
       surface(2680, 1770, 200), surface(2720, 1620, 180), surface(2750, 1450, 160),
       surface(90, 2390, 970, false), surface(270, 2255, 180),

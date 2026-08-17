@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Auth } from '../components/Auth';
+import { Achievements } from '../components/Achievements';
+import { useDailyStreak } from '../lib/useDailyStreak';
 import { usePlayerSession } from '../lib/usePlayerSession';
 import './HomePage.css';
 
-type OpenPanel = 'auth' | 'controls' | 'about' | null;
+type OpenPanel = 'auth' | 'achievements' | 'controls' | 'about' | null;
 
 export function HomePage() {
   const [openPanel, setOpenPanel] = useState<OpenPanel>(null);
   const [, navigate] = useLocation();
   const { user, isLoading, signOut } = usePlayerSession();
+  const streak = useDailyStreak(user?.id);
 
   return (
     <main className="home-menu">
@@ -24,6 +27,12 @@ export function HomePage() {
           {user ? (
             <>
               <p className="home-menu__player">Signed in as <strong>{user.email ?? 'Player'}</strong></p>
+              {streak && (
+                <p className="home-menu__streak">
+                  <span aria-hidden="true">🔥</span> <strong>{streak.current} day streak</strong>
+                  <small>Best: {streak.longest}</small>
+                </p>
+              )}
               <Link href="/game" className="menu-button menu-button--play">
                 <span>Continue playing</span><b>▶</b>
               </Link>
@@ -41,6 +50,7 @@ export function HomePage() {
               <Link href="/game" className="menu-button menu-button--guest">Play as guest</Link>
             </>
           )}
+          <button className="menu-button" onClick={() => setOpenPanel('achievements')}>Achievements</button>
           <button className="menu-button" onClick={() => setOpenPanel('controls')}>How to play</button>
           <button className="menu-button" onClick={() => setOpenPanel('about')}>About</button>
         </nav>
@@ -53,6 +63,7 @@ export function HomePage() {
           <div className="menu-modal__card">
             <button className="menu-modal__close" onClick={() => setOpenPanel(null)} aria-label="Close">×</button>
             {openPanel === 'auth' && <Auth onSuccess={() => navigate('/game')} />}
+            {openPanel === 'achievements' && <Achievements userId={user?.id} />}
             {openPanel === 'controls' && <Controls />}
             {openPanel === 'about' && <About />}
           </div>

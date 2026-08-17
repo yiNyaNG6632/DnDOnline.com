@@ -4,6 +4,7 @@ import type { GameActions } from '../game/engine';
 import { renderGame } from '../game/renderer';
 import { loadEnemyStrategy } from '../lib/enemyAi';
 import type { ControlScheme, Level } from '../game/types';
+import { TouchControls } from './TouchControls';
 
 type Props = {
   level: Level;
@@ -13,6 +14,7 @@ type Props = {
   onProgress: (stars: number) => void;
   onHealthChange: (health: number) => void;
   onEnergyChange: (energy: number) => void;
+  onSecretFound: () => void;
   onStrategyChange: (name: string, taunt: string, generatedByAi: boolean) => void;
   onLose: () => void;
   onWin: () => void;
@@ -20,7 +22,7 @@ type Props = {
 
 export function GameCanvas({
   level, levelIndex, controls, paused, onProgress, onHealthChange, onEnergyChange,
-  onStrategyChange, onLose, onWin,
+  onSecretFound, onStrategyChange, onLose, onWin,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const keysRef = useRef(new Set<string>());
@@ -55,6 +57,7 @@ export function GameCanvas({
     image.src = level.background;
     let frame = 0;
     let lastStars = 0;
+    let lastSecrets = 0;
     let lastHealth = state.player.health;
     let lastEnergy = Math.round(state.player.energy);
     const down = (event: KeyboardEvent) => {
@@ -79,6 +82,8 @@ export function GameCanvas({
       renderGame(ctx, state, level, image);
       const count = state.stars.filter(Boolean).length;
       if (count !== lastStars) { lastStars = count; onProgress(count); }
+      const secretCount = state.discoveredSecrets.filter(Boolean).length;
+      if (secretCount > lastSecrets) { lastSecrets = secretCount; onSecretFound(); }
       if (state.player.health !== lastHealth) {
         lastHealth = state.player.health;
         onHealthChange(lastHealth);
@@ -99,10 +104,10 @@ export function GameCanvas({
       window.removeEventListener('keydown', down);
       window.removeEventListener('keyup', up);
     };
-  }, [level, levelIndex, onEnergyChange, onHealthChange, onLose, onProgress, onStrategyChange, onWin]);
+  }, [level, levelIndex, onEnergyChange, onHealthChange, onLose, onProgress, onSecretFound, onStrategyChange, onWin]);
 
-  const press = (key: string) => () => keysRef.current.add(key);
-  const release = (key: string) => () => keysRef.current.delete(key);
+  const press = (key: string) => keysRef.current.add(key);
+  const release = (key: string) => keysRef.current.delete(key);
   const directionKeys = controls === 'wasd'
     ? { left: 'a', right: 'd', up: 'w', down: 's' }
     : { left: 'arrowleft', right: 'arrowright', up: 'arrowup', down: 'arrowdown' };
@@ -119,27 +124,26 @@ export function GameCanvas({
             keysRef.current.add('e');
             actionsRef.current.power = true;
           }}
-          onPointerUp={release('e')}
-          onPointerLeave={release('e')}
+          onPointerUp={() => release('e')}
+          onPointerLeave={() => release('e')}
         ><kbd>E</kbd> Push / move</button>
       </div>
-      <div className="touch-controls">
-        <button onPointerDown={press(directionKeys.left)} onPointerUp={release(directionKeys.left)}>{directionLabels.left}</button>
-        <button onPointerDown={press(directionKeys.right)} onPointerUp={release(directionKeys.right)}>{directionLabels.right}</button>
-        <button onPointerDown={() => { keysRef.current.add(directionKeys.up); actionsRef.current.jump = true; }} onPointerUp={release(directionKeys.up)}>{directionLabels.up}</button>
-        <button onPointerDown={press(directionKeys.down)} onPointerUp={release(directionKeys.down)}>{directionLabels.down}</button>
-        <button className="touch-power touch-split" aria-label="Split off a jump step" onPointerDown={() => { actionsRef.current.split = true; }}>◐</button>
-        <button
-          className="touch-power"
-          aria-label="Use telekinesis"
-          onPointerDown={() => {
-            keysRef.current.add('e');
-            actionsRef.current.power = true;
-          }}
-          onPointerUp={release('e')}
-          onPointerLeave={release('e')}
-        >✦</button>
-      </div>
+      <TouchControls
+        keys={directionKeys}
+        labels={directionLabels}
+        onPress={press}
+        onRelease={release}
+        onJump={() => {
+          press(directionKeys.up);
+          actionsRef.current.jump = true;
+        }}
+        onSplit={() => { actionsRef.current.split = true; }}
+        onPowerStart={() => {
+          press('e');
+          actionsRef.current.power = true;
+        }}
+        onPowerEnd={() => release('e')}
+      />
     </div>
   );
 }

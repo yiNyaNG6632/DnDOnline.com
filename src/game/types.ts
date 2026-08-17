@@ -5,6 +5,7 @@ export type EnemyTheme = 'bedroom' | 'workshop' | 'attic' | 'clockwork' | 'studi
 
 export type Platform = Rect & {
   movable?: boolean;
+  visible?: boolean;
   dropThrough?: boolean;
   scenery?: 'floor' | 'wood' | 'fabric';
   moveArea?: { minX: number; maxX: number; minY: number; maxY: number };
@@ -23,6 +24,7 @@ export type Level = {
   chapter: string;
   hint: string;
   background: string;
+  backgroundHeight: number;
   accent: string;
   enemyTheme: EnemyTheme;
   gimmick: string;

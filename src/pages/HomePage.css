@@ -18,6 +18,8 @@
 .menu-button--signout { min-height: 34px; border: 0; color: #c8bac9; background: transparent; box-shadow: none; font-size: 9px; }
 .home-menu__player { overflow: hidden; color: #c8bac9; font: 500 9px 'DM Mono'; letter-spacing: .06em; text-overflow: ellipsis; white-space: nowrap; }
 .home-menu__player strong { color: #ffdd91; font-weight: 500; }
+.home-menu__streak { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px 12px; border: 1px solid #ffca6845; border-radius: 10px; color: #ffdd91; background: #1a151dcc; font-size: 11px; }
+.home-menu__streak small { color: #a99baa; font: 500 8px 'DM Mono'; }
 .home-menu__footer { position: absolute; z-index: 2; bottom: 25px; color: #e5d8c6; font: 500 8px 'DM Mono'; letter-spacing: .16em; text-transform: uppercase; }
 .menu-modal { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(12, 14, 19, .72); backdrop-filter: blur(8px); }
 .menu-modal__card { position: relative; width: min(470px, 100%); padding: 42px; border: 1px solid #ffe6b059; border-radius: 24px 17px 27px 18px; background: radial-gradient(circle at 20% 0, #594355, #27202e 65%); box-shadow: 0 30px 80px #07090c; }
@@ -43,6 +45,14 @@
 .auth-panel__form button:disabled { cursor: wait; opacity: .7; }
 .auth-panel__message { margin-top: 14px; color: #ffd689; font-size: 11px; line-height: 1.5; }
 .auth-panel__switch { width: 100%; margin-top: 18px; border: 0; color: #d8cbd9; background: transparent; font-size: 11px; text-decoration: underline; cursor: pointer; }
+.achievements-panel h2 { margin-bottom: 8px; }
+.achievements-panel__note { margin-bottom: 18px; color: #bdb1be; font-size: 11px; }
+.achievement-list { display: grid; gap: 7px; max-height: min(390px, 55vh); overflow-y: auto; padding-right: 4px; }
+.achievement { display: grid; grid-template-columns: 38px 1fr; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid #ffffff12; border-radius: 11px; color: #817684; background: #17131dcc; }
+.achievement > span { font-size: 20px; text-align: center; filter: grayscale(1); }
+.achievement strong { font-size: 11px; }.achievement p { margin-top: 2px; font-size: 9px; line-height: 1.4; }
+.achievement.unlocked { color: #f2e9dc; border-color: #ffca6848; background: #34283acc; }
+.achievement.unlocked > span { filter: none; }
 @keyframes menu-in { from { opacity: 0; transform: translateY(15px) scale(.98); } }
 
 @media (max-width: 600px) {

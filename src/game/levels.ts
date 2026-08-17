@@ -1,4 +1,5 @@
 import { makeRoom } from './metroidvaniaLayouts';
+import { makeSceneRoom } from './sceneLayouts';
 import type { Level } from './types';
 
 export const levels: Level[] = [
@@ -20,7 +21,7 @@ export const levels: Level[] = [
     background: '/assets/moonlit-greenhouse.png',
     hint: 'Climb past the leaves and listen for hollow roots.',
     gimmick: 'Leaf-crowned shadows close in from the vines.',
-    ...makeRoom({ reverse: true, secretNames: ['The Root Cellar', 'Behind the Ivy'] }),
+    ...makeSceneRoom({ pattern: 'steps', reverse: true }),
   },
   {
     name: 'Clockwork Loft',
@@ -30,7 +31,7 @@ export const levels: Level[] = [
     background: '/assets/clockwork-loft.png',
     hint: 'Follow the gears upward, but search below the ticking floor.',
     gimmick: 'Wound-up hunters never stop moving.',
-    ...makeRoom({ secretNames: ['The Silent Gear', 'Pendulum Passage'] }),
+    ...makeSceneRoom({ pattern: 'climb' }),
   },
   {
     name: 'Forgotten Studio',
@@ -40,7 +41,7 @@ export const levels: Level[] = [
     background: '/assets/forgotten-studio.png',
     hint: 'Old paintings cover more than walls.',
     gimmick: 'Paint-stained shadows leap between unfinished work.',
-    ...makeRoom({ reverse: true, secretNames: ['Behind the Canvas', 'The Paint Cupboard'] }),
+    ...makeSceneRoom({ pattern: 'zigzag', reverse: true }),
   },
   {
     name: 'Hidden Theatre',
@@ -50,7 +51,7 @@ export const levels: Level[] = [
     background: '/assets/hidden-theatre.png',
     hint: 'Not every curtain belongs to the stage.',
     gimmick: 'Masked shadows perform their hunt in pairs.',
-    ...makeRoom({ secretNames: ['The Trapdoor', 'Backstage Whisper'] }),
+    ...makeSceneRoom({ pattern: 'steps' }),
   },
   {
     name: 'Storm Map Room',
@@ -60,7 +61,7 @@ export const levels: Level[] = [
     background: '/assets/storm-map-room.png',
     hint: 'The safest route is rarely the straightest one.',
     gimmick: 'Lightning shadows attack in sudden bursts.',
-    ...makeRoom({ reverse: true, secretNames: ['The Sunken Chart', 'Compass Vault'] }),
+    ...makeSceneRoom({ pattern: 'climb', reverse: true }),
   },
   {
     name: 'Midnight Workshop',
@@ -70,7 +71,7 @@ export const levels: Level[] = [
     background: '/assets/craft-room.png',
     hint: 'Tools can build a path—or conceal one.',
     gimmick: 'Goggled shadows guard every invention.',
-    ...makeRoom({ secretNames: ['The Tool Chest', 'Under the Workbench'] }),
+    ...makeSceneRoom({ pattern: 'zigzag' }),
   },
   {
     name: 'Attic of Echoes',
@@ -80,7 +81,7 @@ export const levels: Level[] = [
     background: '/assets/attic-night.png',
     hint: 'Dust settles where footsteps do not.',
     gimmick: 'Ghostly shadows drift through forgotten corners.',
-    ...makeRoom({ reverse: true, secretNames: ['The Old Trunk', 'Dusty Eaves'] }),
+    ...makeSceneRoom({ pattern: 'steps', reverse: true }),
   },
   {
     name: 'The Last Dream',
@@ -90,6 +91,6 @@ export const levels: Level[] = [
     background: '/assets/last-dream.png',
     hint: 'Every path you learned returns one final time.',
     gimmick: 'Dream shadows remember how you escaped before.',
-    ...makeRoom({ secretNames: ['The Lost Memory', 'The Quiet Between'] }),
+    ...makeSceneRoom({ pattern: 'climb' }),
   },
 ];

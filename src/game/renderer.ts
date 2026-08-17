@@ -3,6 +3,7 @@ import { drawPlasticineHero } from './plasticineCharacters';
 import { drawSplitPart } from './splitCharacter';
 import { drawThemedEnemy } from './themedEnemies';
 import { drawSecretAreas, drawSecretNotice } from './secretAreas';
+import { drawPlatforms } from './platformRenderer';
 
 const WIDTH = 1000;
 const HEIGHT = 650;
@@ -19,8 +20,9 @@ export function renderGame(
   ctx.fillStyle = '#17101e'; ctx.fillRect(0, 0, WIDTH, HEIGHT);
   ctx.save();
   ctx.translate(-cameraX, -cameraY);
-  if (image.complete && image.naturalWidth > 0) ctx.drawImage(image, 0, 0, 3000, 2000);
+  if (image.complete && image.naturalWidth > 0) drawBackground(ctx, image, level);
   drawSecretAreas(ctx, state, level);
+  drawPlatforms(ctx, state, level);
   level.stars.forEach((star, index) => {
     if (!state.stars[index] && !isInsideInactiveSecret(state, level, star.x, star.y)) {
       drawStar(ctx, star.x, star.y, level.accent);
@@ -40,10 +42,24 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function drawBackground(ctx: CanvasRenderingContext2D, image: HTMLImageElement, level: Level) {
+  const sourceRatio = image.naturalWidth / image.naturalHeight;
+  const targetRatio = level.width / level.backgroundHeight;
+  let sx = 0; let sy = 0; let sw = image.naturalWidth; let sh = image.naturalHeight;
+  if (sourceRatio > targetRatio) {
+    sw = image.naturalHeight * targetRatio;
+    sx = (image.naturalWidth - sw) / 2;
+  } else if (sourceRatio < targetRatio) {
+    sh = image.naturalWidth / targetRatio;
+    sy = (image.naturalHeight - sh) / 2;
+  }
+  ctx.drawImage(image, sx, sy, sw, sh, 0, 0, level.width, level.backgroundHeight);
+}
+
 function drawRoomMap(ctx: CanvasRenderingContext2D, state: GameState, level: Level, cameraX: number, cameraY: number) {
   const x = WIDTH - 174; const y = 185; const w = 148; const h = 70;
   const bounds = state.activeSecret === null
-    ? { x: 0, y: 0, w: 3000, h: level.height }
+    ? { x: 0, y: 0, w: level.width, h: level.height }
     : level.secrets[state.activeSecret].room;
   ctx.fillStyle = '#100b18cc'; ctx.beginPath(); ctx.roundRect(x, y, w, h, 10); ctx.fill();
   ctx.strokeStyle = '#8f7b9844'; ctx.stroke();
