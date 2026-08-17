@@ -69,8 +69,8 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
 .ending button { display: block; margin: 32px auto 18px; border: 0; border-radius: 14px; padding: 14px 22px; background: #ffca68; color: #2d1c39; font-weight: 800; cursor: pointer; }.ending a { color: #998b9c; font-size: 12px; }
 
 @media (max-width: 760px) {
-  .game-page { min-height: 100svh; padding: max(5px, env(safe-area-inset-top)) max(5px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(5px, env(safe-area-inset-left)); }
-  .game-hud { top: 12px; right: 14px; left: 14px; grid-template-columns: 1fr auto 1fr; }
+  .game-page { width: 100%; height: 100svh; height: 100dvh; min-height: 0; overflow: hidden; padding: 0; }
+  .game-hud { top: max(12px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); left: max(14px, env(safe-area-inset-left)); grid-template-columns: 1fr auto 1fr; }
   .game-brand { display: none; }
   .game-frame-actions button { min-width: 32px; min-height: 32px; }
   .power-buttons { display: none; }
@@ -79,13 +79,13 @@ kbd { display: inline-grid; place-items: center; min-width: 25px; height: 25px; 
   .room-title small { font-size: 7px; }
   .memory-count { grid-template-columns: repeat(3, 15px); }
   .memory-count span, .memory-count .game-streak { font-size: 6px; }
-  .game-frame { width: 100%; padding: 4px; border-radius: 14px; }
-  .game-stage { border-radius: 10px; }
+  .game-frame { width: 100%; max-width: none; height: 100%; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+  .game-stage { width: 100%; height: 100%; border-radius: 0; aspect-ratio: auto; }
   .hint-card { top: 64px; bottom: auto; left: 12px; max-width: 52%; padding: 7px 9px; }
   .hint-card span { font-size: 9px; }
   .touch-controls { display: flex; }
   .game-help { display: none; }
-  .pause-overlay { inset: 4px; border-radius: 10px; }
+  .pause-overlay { inset: 0; border-radius: 0; }
   .pause-card { padding: 20px; }
   .ending { padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
   .ending__card { padding: 30px 18px; border-radius: 22px; }
