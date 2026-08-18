@@ -15,31 +15,7 @@ function drawPlatform(
 ) {
   ctx.save();
   if (platform.movable || platform.visible) drawSolidPlatform(ctx, platform, accent, selected);
-  else drawSurfaceEdge(ctx, platform, accent);
   ctx.restore();
-}
-
-function drawSurfaceEdge(ctx: CanvasRenderingContext2D, platform: Platform, accent: string) {
-  const edge = ctx.createLinearGradient(platform.x, 0, platform.x + platform.w, 0);
-  edge.addColorStop(0, `${accent}00`);
-  edge.addColorStop(0.08, `${accent}70`);
-  edge.addColorStop(0.92, `${accent}70`);
-  edge.addColorStop(1, `${accent}00`);
-  ctx.strokeStyle = '#120c1899';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(platform.x + 3, platform.y + 4);
-  ctx.lineTo(platform.x + platform.w - 3, platform.y + 4);
-  ctx.stroke();
-
-  ctx.strokeStyle = edge;
-  ctx.lineWidth = 2;
-  ctx.shadowColor = accent;
-  ctx.shadowBlur = 5;
-  ctx.beginPath();
-  ctx.moveTo(platform.x + 3, platform.y);
-  ctx.lineTo(platform.x + platform.w - 3, platform.y);
-  ctx.stroke();
 }
 
 function drawSolidPlatform(

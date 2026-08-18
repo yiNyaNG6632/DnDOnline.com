@@ -1,4 +1,5 @@
-import type { GameState, Level, Rect, SecretArea } from './types';
+import type { GameState, Level, Rect } from './types';
+import { drawThemedSecretRoom } from './secretRoomThemes';
 
 function contains(area: Rect, x: number, y: number) {
   return x >= area.x && x <= area.x + area.w && y >= area.y && y <= area.y + area.h;
@@ -18,21 +19,10 @@ export function updateSecretAreas(state: GameState, level: Level) {
 
 export function drawSecretAreas(ctx: CanvasRenderingContext2D, state: GameState, level: Level) {
   level.secrets.forEach((secret, index) => {
-    if (state.activeSecret === index) drawRoom(ctx, secret);
+    if (state.activeSecret === index) {
+      drawThemedSecretRoom(ctx, secret, level.enemyTheme, index);
+    }
   });
-}
-
-function drawRoom(ctx: CanvasRenderingContext2D, secret: SecretArea) {
-  const { x, y, w, h } = secret.room;
-  const gradient = ctx.createLinearGradient(x, y, x, y + h);
-  gradient.addColorStop(0, '#17101e');
-  gradient.addColorStop(1, secret.kind === 'drawer' ? '#3c253b' : '#24202e');
-  ctx.fillStyle = gradient; ctx.fillRect(x, y, w, h);
-  ctx.strokeStyle = '#9e879733'; ctx.lineWidth = 8; ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
-  ctx.fillStyle = '#ffffff0a';
-  for (let offset = 90; offset < w; offset += 135) ctx.fillRect(x + offset, y + 60, 3, h - 100);
-  ctx.fillStyle = '#e9d8e7aa'; ctx.font = '11px DM Mono'; ctx.textAlign = 'center';
-  ctx.fillText(secret.name.toUpperCase(), x + w / 2, y + 105);
 }
 
 export function drawSecretNotice(ctx: CanvasRenderingContext2D, state: GameState, level: Level) {
