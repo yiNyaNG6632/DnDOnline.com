@@ -1,0 +1,15 @@
+.cutscene { position: fixed; z-index: 30; inset: 0; display: grid; overflow: hidden; place-items: center; cursor: pointer; background: #000; }
+.cutscene__viewport { position: relative; width: 100vw; max-height: 100vh; overflow: hidden; aspect-ratio: 2.39 / 1; background: #050505; animation: film-gate .18s steps(2) infinite; }
+.cutscene__art { width: 100%; height: 100%; object-fit: cover; filter: grayscale(1) contrast(1.24) brightness(.9); animation: film-shot 3.6s cubic-bezier(.2, .7, .35, 1) both; }
+.cutscene__viewport--reverse .cutscene__art { animation-name: film-shot-reverse; }
+.cutscene__shade { position: absolute; inset: 0; background: radial-gradient(ellipse at center, transparent 48%, #0009 112%); pointer-events: none; }
+.cutscene__viewport::before { content: ''; position: absolute; z-index: 2; inset: 0; pointer-events: none; opacity: .22; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' seed='7'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); mix-blend-mode: screen; animation: film-grain .16s steps(2) infinite; }
+.cutscene__viewport::after { content: ''; position: absolute; z-index: 3; inset: -5%; pointer-events: none; opacity: .2; background: repeating-linear-gradient(90deg, transparent 0 17%, #fff 17.04%, transparent 17.1% 41%); animation: film-scratches 1.7s steps(2) infinite; }
+@keyframes film-shot { 0% { opacity: 0; transform: scale(1.08) translateX(-1.5%); } 8% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; transform: scale(1.02) translateX(1%); } }
+@keyframes film-shot-reverse { 0% { opacity: 0; transform: scale(1.07) translateX(1.4%); } 8% { opacity: 1; } 90% { opacity: 1; } 100% { opacity: 0; transform: scale(1.01) translateX(-1%); } }
+@keyframes film-grain { 0% { transform: translate(-2%, 1%); } 50% { transform: translate(2%, -2%); } 100% { transform: translate(-1%, 2%); } }
+@keyframes film-scratches { 0%, 70% { transform: translateX(-18%); } 72%, 100% { transform: translateX(27%); } }
+@keyframes film-gate { 0%, 90% { filter: brightness(1); } 92% { filter: brightness(.86); } }
+@media (max-width: 600px) { .cutscene__art { object-position: center; } }
+@media (prefers-reduced-motion: reduce) { .cutscene__viewport, .cutscene__viewport::before, .cutscene__viewport::after { animation: none; }.cutscene__art { animation: film-fade 3.6s ease both; } }
+@keyframes film-fade { from, to { opacity: 0; } 10%, 90% { opacity: 1; } }

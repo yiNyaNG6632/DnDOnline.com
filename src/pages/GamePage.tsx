@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { FullscreenButton } from '../components/FullscreenButton';
 import { GameCanvas } from '../components/GameCanvas';
+import { GameEnding } from '../components/GameEnding';
+import { GamePause } from '../components/GamePause';
 import { StatusBar } from '../components/StatusBar';
+import { StoryCutscene } from '../components/StoryCutscene';
+import type { CutsceneId } from '../components/StoryCutscene';
 import { levels } from '../game/levels';
 import type { ControlScheme } from '../game/types';
 import { useAchievementUnlocks } from '../lib/useAchievementUnlocks';
@@ -26,6 +30,7 @@ export function GamePage() {
   const [enemyPlan, setEnemyPlan] = useState(LOADING_ENEMY_PLAN);
   const [finished, setFinished] = useState(false);
   const [foundSecret, setFoundSecret] = useState(false);
+  const [cutscene, setCutscene] = useState<CutsceneId | null>('awakening');
   const { user } = usePlayerSession();
   const streak = useDailyStreak(user?.id, true);
   const level = levels[levelIndex];
@@ -37,24 +42,30 @@ export function GamePage() {
   }, []);
   const handleLose = useCallback(() => { setPaused(false); setDefeated(true); }, []);
   const handleWin = useCallback(() => {
-    if (levelIndex === levels.length - 1) { setPaused(false); setFinished(true); }
+    if (levelIndex === levels.length - 1) {
+      setPaused(false);
+      setFinished(true);
+      setCutscene('origin');
+    }
     else {
       setStars(0);
       setHealth(3);
       setEnergy(100);
       setEnemyPlan(LOADING_ENEMY_PLAN);
       setLevelIndex((current) => current + 1);
+      if (levelIndex === 2) setCutscene('clue');
+      if (levelIndex === 5) setCutscene('maker');
     }
   }, [levelIndex]);
 
   useEffect(() => {
     const togglePause = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && document.fullscreenElement) return;
-      if (event.key === 'Escape' && !defeated && !finished) setPaused((current) => !current);
+      if (event.key === 'Escape' && !cutscene && !defeated && !finished) setPaused((current) => !current);
     };
     window.addEventListener('keydown', togglePause);
     return () => window.removeEventListener('keydown', togglePause);
-  }, [defeated, finished]);
+  }, [cutscene, defeated, finished]);
 
   const restart = () => {
     setStars(0);
@@ -64,6 +75,7 @@ export function GamePage() {
     setPaused(false);
     setFinished(false);
     setEnemyPlan(LOADING_ENEMY_PLAN);
+    setCutscene('awakening');
     setRunId((current) => current + 1);
     setLevelIndex(0);
   };
@@ -88,7 +100,7 @@ export function GamePage() {
           level={level}
           levelIndex={levelIndex}
           controls={controls}
-          paused={paused}
+          paused={paused || cutscene !== null}
           onProgress={handleProgress}
           onHealthChange={setHealth}
           onEnergyChange={setEnergy}
@@ -103,6 +115,7 @@ export function GamePage() {
               <Link href="/" className="game-brand"><i /> TELECINE</Link>
               <div className="game-frame-actions">
                 <FullscreenButton target={gameFrameRef} />
+                <button className="pause-button" onClick={() => setCutscene('awakening')}>Story</button>
                 <button className="pause-button" onClick={() => setPaused(true)}>Pause</button>
               </div>
             </div>
@@ -123,21 +136,7 @@ export function GamePage() {
           <b>{enemyPlan.ai ? 'GEMINI TACTIC' : 'ENEMY TACTIC'} · {enemyPlan.name}</b>
           <span>{hint}</span>
         </div>
-        {paused && (
-          <div className="pause-overlay" role="dialog" aria-modal="true" aria-labelledby="pause-title">
-            <div className="pause-card">
-              <small>GAME PAUSED</small>
-              <h2 id="pause-title">Controls</h2>
-              <div className="control-switch">
-                <button className={controls === 'arrows' ? 'active' : ''} onClick={() => setControls('arrows')}>Arrow keys</button>
-                <button className={controls === 'wasd' ? 'active' : ''} onClick={() => setControls('wasd')}>WASD</button>
-              </div>
-              <p>Tap Down to drop through ledges—or enter a hidden opening.</p>
-              <button className="resume-button" onClick={() => setPaused(false)}>Resume</button>
-              <Link href="/" className="pause-title-button">Back to title</Link>
-            </div>
-          </div>
-        )}
+        {paused && <GamePause controls={controls} onControlsChange={setControls} onResume={() => setPaused(false)} />}
       </section>
       <div className="game-help">
         <span><kbd>{controls === 'wasd' ? 'W' : '↑'}</kbd> JUMP</span><span><kbd>Q</kbd> SPLIT ×3</span>
@@ -145,26 +144,9 @@ export function GamePage() {
         <span><kbd>E</kbd> PUSH ENEMIES</span>
         <span><kbd>E</kbd> + {controls === 'wasd' ? 'WASD' : 'ARROWS'} MOVE PLATFORM</span>
       </div>
-      {defeated && (
-        <div className="ending">
-          <div className="ending__card">
-            <span className="ending__star">☾</span><p>THE SHADOWS CAUGHT PIP</p>
-            <h1>Try a different path<br />or push them <em>away.</em></h1>
-            <button onClick={retry}>Try again <b>↻</b></button>
-            <Link href="/">Back to the title</Link>
-          </div>
-        </div>
-      )}
-      {finished && (
-        <div className="ending">
-          <div className="ending__card">
-            <span className="ending__star">✦</span><p>THE END... FOR NOW</p>
-            <h1>Every little thought<br />can move a <em>big world.</em></h1>
-            <button onClick={restart}>Play again <b>↻</b></button>
-            <Link href="/">Back to the title</Link>
-          </div>
-        </div>
-      )}
+      {defeated && <GameEnding kind="defeat" onAction={retry} />}
+      {finished && <GameEnding kind="finished" onAction={restart} />}
+      {cutscene && <StoryCutscene id={cutscene} onComplete={() => setCutscene(null)} />}
     </main>
   );
 }
