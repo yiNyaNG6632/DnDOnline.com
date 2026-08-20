@@ -1,6 +1,7 @@
 export type Rect = { x: number; y: number; w: number; h: number };
 export type Point = { x: number; y: number };
 export type ControlScheme = 'arrows' | 'wasd';
+export type InputMode = 'pc' | 'mobile';
 export type EnemyTheme = 'bedroom' | 'workshop' | 'attic' | 'clockwork' | 'studio' | 'dream' | 'greenhouse' | 'theatre' | 'storm';
 
 export type Platform = Rect & {

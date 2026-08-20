@@ -1,14 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'wouter';
-import { FullscreenButton } from '../components/FullscreenButton';
+import { ControlChoice } from '../components/ControlChoice';
 import { GameCanvas } from '../components/GameCanvas';
 import { GameEnding } from '../components/GameEnding';
+import { GameHud } from '../components/GameHud';
 import { GamePause } from '../components/GamePause';
-import { StatusBar } from '../components/StatusBar';
 import { StoryCutscene } from '../components/StoryCutscene';
 import type { CutsceneId } from '../components/StoryCutscene';
 import { levels } from '../game/levels';
-import type { ControlScheme } from '../game/types';
+import type { ControlScheme, InputMode } from '../game/types';
 import { useAchievementUnlocks } from '../lib/useAchievementUnlocks';
 import { useDailyStreak } from '../lib/useDailyStreak';
 import { usePlayerSession } from '../lib/usePlayerSession';
@@ -24,13 +23,14 @@ export function GamePage() {
   const [health, setHealth] = useState(3);
   const [energy, setEnergy] = useState(100);
   const [controls, setControls] = useState<ControlScheme>('arrows');
+  const [inputMode, setInputMode] = useState<InputMode | null>(null);
   const [paused, setPaused] = useState(false);
   const [defeated, setDefeated] = useState(false);
   const [runId, setRunId] = useState(0);
   const [enemyPlan, setEnemyPlan] = useState(LOADING_ENEMY_PLAN);
   const [finished, setFinished] = useState(false);
   const [foundSecret, setFoundSecret] = useState(false);
-  const [cutscene, setCutscene] = useState<CutsceneId | null>('awakening');
+  const [cutscene, setCutscene] = useState<CutsceneId | null>(null);
   const { user } = usePlayerSession();
   const streak = useDailyStreak(user?.id, true);
   const level = levels[levelIndex];
@@ -61,11 +61,13 @@ export function GamePage() {
   useEffect(() => {
     const togglePause = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && document.fullscreenElement) return;
-      if (event.key === 'Escape' && !cutscene && !defeated && !finished) setPaused((current) => !current);
+      if (event.key === 'Escape' && inputMode && !cutscene && !defeated && !finished) {
+        setPaused((current) => !current);
+      }
     };
     window.addEventListener('keydown', togglePause);
     return () => window.removeEventListener('keydown', togglePause);
-  }, [cutscene, defeated, finished]);
+  }, [cutscene, defeated, finished, inputMode]);
 
   const restart = () => {
     setStars(0);
@@ -87,6 +89,14 @@ export function GamePage() {
     setEnemyPlan(LOADING_ENEMY_PLAN);
     setRunId((current) => current + 1);
   };
+  const chooseInputMode = (mode: InputMode) => {
+    const frame = gameFrameRef.current;
+    if (!document.fullscreenElement && frame?.requestFullscreen) {
+      void frame.requestFullscreen().catch(() => undefined);
+    }
+    setInputMode(mode);
+    setCutscene('awakening');
+  };
   const hint = stars === 3 ? 'The door is awake. Find it.' : enemyPlan.taunt;
   useAchievementUnlocks({
     userId: user?.id, stars, foundSecret, levelIndex, finished, streakCurrent: streak?.current,
@@ -100,7 +110,8 @@ export function GamePage() {
           level={level}
           levelIndex={levelIndex}
           controls={controls}
-          paused={paused || cutscene !== null}
+          inputMode={inputMode ?? 'pc'}
+          paused={paused || cutscene !== null || inputMode === null}
           onProgress={handleProgress}
           onHealthChange={setHealth}
           onEnergyChange={setEnergy}
@@ -109,41 +120,35 @@ export function GamePage() {
           onLose={handleLose}
           onWin={handleWin}
         />
-        <div className="game-hud">
-          <div className="game-player-status">
-            <div className="game-brand-row">
-              <Link href="/" className="game-brand"><i /> TELECINE</Link>
-              <div className="game-frame-actions">
-                <FullscreenButton target={gameFrameRef} />
-                <button className="pause-button" onClick={() => setCutscene('awakening')}>Story</button>
-                <button className="pause-button" onClick={() => setPaused(true)}>Pause</button>
-              </div>
-            </div>
-            <StatusBar label="Health" value={health} max={3} tone="health" />
-            <StatusBar label="Energy" value={energy} max={100} tone="energy" />
-          </div>
-          <div className="room-title">
-            <small>{level.chapter}</small>
-            <strong>{level.name}</strong>
-          </div>
-          <div className="memory-count" aria-label={`${stars} of 3 memories`}>
-            {[0, 1, 2].map((item) => <i className={item < stars ? 'found' : ''} key={item}>✦</i>)}
-            <span>MEMORIES</span>
-            {streak && <small className="game-streak">🔥 {streak.current} DAY STREAK</small>}
-          </div>
-        </div>
+        <GameHud
+          frameRef={gameFrameRef}
+          level={level}
+          health={health}
+          energy={energy}
+          stars={stars}
+          streak={streak?.current}
+          onStory={() => setCutscene('awakening')}
+          onPause={() => setPaused(true)}
+        />
         <div className="hint-card">
           <b>{enemyPlan.ai ? 'GEMINI TACTIC' : 'ENEMY TACTIC'} · {enemyPlan.name}</b>
           <span>{hint}</span>
         </div>
-        {paused && <GamePause controls={controls} onControlsChange={setControls} onResume={() => setPaused(false)} />}
+        {paused && inputMode && <GamePause
+          controls={controls}
+          inputMode={inputMode}
+          onControlsChange={setControls}
+          onInputModeChange={setInputMode}
+          onResume={() => setPaused(false)}
+        />}
+        {!inputMode && <ControlChoice onChoose={chooseInputMode} />}
       </section>
-      <div className="game-help">
+      {inputMode === 'pc' && <div className="game-help">
         <span><kbd>{controls === 'wasd' ? 'W' : '↑'}</kbd> JUMP</span><span><kbd>Q</kbd> SPLIT ×3</span>
         <span><kbd>{controls === 'wasd' ? 'S' : '↓'}</kbd> DROP / ENTER</span>
         <span><kbd>E</kbd> PUSH ENEMIES</span>
         <span><kbd>E</kbd> + {controls === 'wasd' ? 'WASD' : 'ARROWS'} MOVE PLATFORM</span>
-      </div>
+      </div>}
       {defeated && <GameEnding kind="defeat" onAction={retry} />}
       {finished && <GameEnding kind="finished" onAction={restart} />}
       {cutscene && <StoryCutscene id={cutscene} onComplete={() => setCutscene(null)} />}

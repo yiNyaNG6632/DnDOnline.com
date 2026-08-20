@@ -1,8 +1,6 @@
 import type { EnemyTheme, Platform } from './types';
-
-const shelf = (x: number, y: number, w: number): Platform => (
-  { x, y, w, h: 16, scenery: 'wood', dropThrough: true }
-);
+import { physicalSurfaces } from './physicalSurfaces';
+import { shelf } from './surfaceFactory';
 
 const surfaces: Record<EnemyTheme, Platform[]> = {
   bedroom: [
@@ -60,5 +58,5 @@ const surfaces: Record<EnemyTheme, Platform[]> = {
 };
 
 export function getLevelSurfaces(theme: EnemyTheme) {
-  return surfaces[theme].map((platform) => ({ ...platform }));
+  return [...surfaces[theme], ...physicalSurfaces[theme]].map((platform) => ({ ...platform }));
 }

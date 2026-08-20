@@ -1,6 +1,6 @@
-import type { ControlScheme, GameState, Level, Rect } from './types';
+import type { ControlScheme, GameState, Level } from './types';
 import { tryJumpFromSplit, updateSplitJump } from './splitJump';
-import { squashOnLanding, stretchForJump, updateSlimePhysics } from './slimePhysics';
+import { stretchForJump, updateSlimePhysics } from './slimePhysics';
 import { updatePlatformTelekinesis } from './telekinesis';
 import { pushEnemies, updateEnemies } from './enemyPhysics';
 import { DEFAULT_ENEMY_STRATEGY } from './enemyStrategy';
@@ -9,6 +9,7 @@ import {
 } from './playerEnergy';
 import { updateSecretAreas } from './secretAreas';
 import { updateDropThrough } from './platformDrop';
+import { movePlayerWithCollisions } from './playerCollisions';
 
 export type GameActions = { jump: boolean; split: boolean; power: boolean };
 
@@ -39,10 +40,6 @@ export function createState(level: Level): GameState {
   };
 }
 
-function overlaps(a: Rect, b: Rect) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-}
-
 function inputAxis(keys: Set<string>, negative: string[], positive: string[]) {
   const low = negative.some((key) => keys.has(key));
   const high = positive.some((key) => keys.has(key));
@@ -67,8 +64,8 @@ export function updateGame(
   updateSplitJump(state, actions.split);
   if (usingTelekinesis) player.vx *= 0.7;
   else movePlayer(state, keys, actions.jump, controls);
-  updateDropThrough(state, keys, controls);
-  applyGravityAndCollisions(state, level.width);
+  updateDropThrough(state, level, keys, controls);
+  movePlayerWithCollisions(state, level);
   updateSecretAreas(state, level);
   updateSlimePhysics(player);
   if (player.y > level.height + 120) resetPlayer(state, level);
@@ -98,33 +95,6 @@ function movePlayer(state: GameState, keys: Set<string>, jumpPressed: boolean, c
     player.vy = -12.5;
     player.pulse = 18;
     stretchForJump(player);
-  }
-}
-
-function applyGravityAndCollisions(state: GameState, worldWidth: number) {
-  const player = state.player;
-  player.vy = Math.min(player.vy + 0.7, 16);
-  player.x = Math.max(0, Math.min(worldWidth - player.w, player.x + player.vx));
-  player.y += player.vy;
-  player.grounded = false;
-  state.dropThroughFrames = Math.max(0, state.dropThroughFrames - 1);
-  for (const platform of state.platforms) {
-    if (state.dropThroughFrames > 0) continue;
-    if (overlaps(player, platform) && player.vy >= 0 && player.y + player.h - player.vy <= platform.y + 8) {
-      const impactSpeed = player.vy;
-      player.y = platform.y - player.h;
-      player.vy = 0;
-      player.grounded = true;
-      player.canDoubleJump = false;
-      player.splitUsed = false;
-      player.splitCount = 0;
-      state.splitPart = null;
-      if (impactSpeed > 3) squashOnLanding(player, impactSpeed);
-      if (impactSpeed > 11.5) {
-        player.vy = -Math.min(2.2, (impactSpeed - 9) * 0.45);
-        player.grounded = false;
-      }
-    }
   }
 }
 

@@ -3,13 +3,14 @@ import { createState, updateGame } from '../game/engine';
 import type { GameActions } from '../game/engine';
 import { renderGame } from '../game/renderer';
 import { loadEnemyStrategy } from '../lib/enemyAi';
-import type { ControlScheme, Level } from '../game/types';
+import type { ControlScheme, InputMode, Level } from '../game/types';
 import { TouchControls } from './TouchControls';
 
 type Props = {
   level: Level;
   levelIndex: number;
   controls: ControlScheme;
+  inputMode: InputMode;
   paused: boolean;
   onProgress: (stars: number) => void;
   onHealthChange: (health: number) => void;
@@ -21,7 +22,7 @@ type Props = {
 };
 
 export function GameCanvas({
-  level, levelIndex, controls, paused, onProgress, onHealthChange, onEnergyChange,
+  level, levelIndex, controls, inputMode, paused, onProgress, onHealthChange, onEnergyChange,
   onSecretFound, onStrategyChange, onLose, onWin,
 }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -115,9 +116,9 @@ export function GameCanvas({
     ? { left: 'A', right: 'D', up: 'W', down: 'S' }
     : { left: '←', right: '→', up: '↑', down: '↓' };
   return (
-    <div className="game-stage">
+    <div className={`game-stage game-stage--${inputMode}`}>
       <canvas ref={canvasRef} width="1000" height="650" aria-label="Telecine game world" />
-      <div className="power-buttons">
+      {inputMode === 'pc' && <div className="power-buttons">
         <button onPointerDown={() => { actionsRef.current.split = true; }}><kbd>Q</kbd> Split step</button>
         <button
           onPointerDown={() => {
@@ -127,8 +128,8 @@ export function GameCanvas({
           onPointerUp={() => release('e')}
           onPointerLeave={() => release('e')}
         ><kbd>E</kbd> Push / move</button>
-      </div>
-      <TouchControls
+      </div>}
+      {inputMode === 'mobile' && <TouchControls
         keys={directionKeys}
         labels={directionLabels}
         onPress={press}
@@ -143,7 +144,7 @@ export function GameCanvas({
           actionsRef.current.power = true;
         }}
         onPowerEnd={() => release('e')}
-      />
+      />}
     </div>
   );
 }

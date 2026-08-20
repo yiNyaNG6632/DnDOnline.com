@@ -1,15 +1,17 @@
 import type { GameState, Level, TelekineticObject } from './types';
+import { isPlatformActive } from './platformVisibility';
 
 export function updateEnemies(state: GameState, level: Level) {
+  const platforms = state.platforms.filter((platform) => isPlatformActive(state, level, platform));
   state.enemies.forEach((enemy) => {
     chooseAttack(state, enemy);
     const previousY = enemy.y;
     enemy.vy = Math.min(enemy.vy + 0.55, 14);
-    enemy.x = Math.max(22, Math.min(level.width - 22, enemy.x + enemy.vx));
+    moveEnemyHorizontally(enemy, platforms, level.width);
     enemy.y += enemy.vy;
     enemy.vx *= 0.94;
     damagePlayer(state, enemy);
-    const landingY = state.platforms
+    const landingY = platforms
       .filter((platform) => enemy.x >= platform.x && enemy.x <= platform.x + platform.w)
       .map((platform) => platform.y - 40)
       .filter((y) => y >= previousY - 2 && enemy.y >= y)
@@ -20,6 +22,27 @@ export function updateEnemies(state: GameState, level: Level) {
     if (Math.abs(enemy.vx) < 0.08) enemy.vx = 0;
   });
   state.enemies = state.enemies.filter((enemy) => enemy.y < level.height + 100);
+}
+
+function moveEnemyHorizontally(
+  enemy: TelekineticObject,
+  platforms: GameState['platforms'],
+  worldWidth: number,
+) {
+  const previousX = enemy.x;
+  enemy.x = Math.max(22, Math.min(worldWidth - 22, enemy.x + enemy.vx));
+  for (const platform of platforms) {
+    const overlapsVertically = enemy.y < platform.y + platform.h && enemy.y + 40 > platform.y;
+    if (!overlapsVertically) continue;
+    if (enemy.vx > 0 && previousX + 22 <= platform.x + 8 && enemy.x + 22 > platform.x) {
+      enemy.x = platform.x - 22;
+      enemy.vx = 0;
+    } else if (enemy.vx < 0 && previousX - 22 >= platform.x + platform.w - 8
+      && enemy.x - 22 < platform.x + platform.w) {
+      enemy.x = platform.x + platform.w + 22;
+      enemy.vx = 0;
+    }
+  }
 }
 
 export function pushEnemies(state: GameState) {

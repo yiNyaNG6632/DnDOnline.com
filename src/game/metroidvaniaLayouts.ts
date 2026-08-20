@@ -34,7 +34,7 @@ function scaleSurface(platform: Platform): Platform {
     x: Math.round(platform.x * SURFACE_SCALE_X),
     y: Math.round(platform.y * SURFACE_SCALE_Y),
     w: Math.round(platform.w * SURFACE_SCALE_X),
-    h: 20,
+    h: platform.dropThrough === false ? Math.round(platform.h * SURFACE_SCALE_Y) : 20,
   };
 }
 
